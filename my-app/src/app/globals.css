@@ -3,68 +3,6 @@
 :root {
   --background: #ffffff;
   --foreground: #171717;
-  --gap-0: 0px;
-  --gap-1: 4px;
-  --gap-2: 4px;
-  --gap-3: 8px;
-  --gap-4: 8px;
-  --gap-5: 16px;
-  --gap-6: 18px;
-  --gap-7: 20px;
-  --gap-8: 28px;
-  --gap-9: 32px;
-  --gap-10: 40px;
-  --gap-11: 60px;
-  --gap-contents: 60px;
-  --gap-layout-margin-1: 100px;
-  --gap-layout-margin-2: 20px;
-  --gap-layout-margin-3: 82px;
-
-  /* 한화체 폰트 변수 (Next Font에서 생성된 변수를 참조) */
-  --font-hanwha-b: var(--font-hanwha);
-  --font-hanwha-r: var(--font-hanwha);
-  --font-hanwha-l: var(--font-hanwha);
-}
-
-@media (min-width: 768px) {
-  :root {
-    --gap-1: 4px;
-    --gap-2: 4px;
-    --gap-3: 8px;
-    --gap-4: 8px;
-    --gap-5: 16px;
-    --gap-6: 20px;
-    --gap-7: 24px;
-    --gap-8: 40px;
-    --gap-9: 48px;
-    --gap-10: 60px;
-    --gap-11: 80px;
-    --gap-contents: 80px;
-    --gap-layout-margin-1: 100px;
-    --gap-layout-margin-2: 30px;
-    --gap-layout-margin-3: 102px;
-  }
-}
-
-/* ③ PC_1920 값 */
-@media (min-width: 1920px) {
-  :root {
-    --gap-1: 4px;
-    --gap-2: 8px;
-    --gap-3: 12px;
-    --gap-4: 16px;
-    --gap-5: 20px;
-    --gap-6: 24px;
-    --gap-7: 32px;
-    --gap-8: 40px;
-    --gap-9: 60px;
-    --gap-10: 80px;
-    --gap-11: 120px;
-    --gap-contents: 160px;
-    --gap-layout-margin-1: 202px;
-    --gap-layout-margin-2: 48px;
-    --gap-layout-margin-3: 194px;
-  }
 }
 
 @theme inline {
@@ -128,24 +66,23 @@
   /* 커스텀 색상 설정 */
 
   /* text colors */
-  --color-text-dark: #595959;
-  --color-text-default: #797979;
-  --color-text-secondary: #959595;
-  --color-text-tertiary: #979797;
-  --color-text-disabled: #ababab;
+  --color-normal: #111111;
+  --color-dark: #595959;
+  --color-default: #797979;
+  --color-secondary: #959595;
+  --color-tertiary: #979797;
+  --color-disabled: #ababab;
 
   /* background colors */
-  --color-bg-light: #f7f7f7;
-  --color-bg-lighter: #f5f5f5;
-  --color-bg-white: #fff;
+  --color-light: #f7f7f7;
+  --color-lighter: #f5f5f5;
+  --color-white: #fff;
 
   /* border colors */
-  --color-border-subtle: #f7f7f7;
-  --color-border-very-light: #f5f5f5;
-  --color-border-light: #ececec;
-  --color-border-base: #e1e1e1;
-  --color-border-medium: #d7d7d7;
-  --color-border-strong: #d1d5dc;
+  --color-edge: #ececec;
+  --color-base: #e1e1e1;
+  --color-medium: #d7d7d7;
+  --color-strong: #d1d5dc;
 
   /* Color Palette */
   --color-blue: #3b82f6;
