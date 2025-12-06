@@ -1,0 +1,297 @@
+@import 'tailwindcss';
+
+:root {
+  --background: #ffffff;
+  --foreground: #171717;
+  --gap-0: 0px;
+  --gap-1: 4px;
+  --gap-2: 4px;
+  --gap-3: 8px;
+  --gap-4: 8px;
+  --gap-5: 16px;
+  --gap-6: 18px;
+  --gap-7: 20px;
+  --gap-8: 28px;
+  --gap-9: 32px;
+  --gap-10: 40px;
+  --gap-11: 60px;
+  --gap-contents: 60px;
+  --gap-layout-margin-1: 100px;
+  --gap-layout-margin-2: 20px;
+  --gap-layout-margin-3: 82px;
+
+  /* 한화체 폰트 변수 (Next Font에서 생성된 변수를 참조) */
+  --font-hanwha-b: var(--font-hanwha);
+  --font-hanwha-r: var(--font-hanwha);
+  --font-hanwha-l: var(--font-hanwha);
+}
+
+@media (min-width: 768px) {
+  :root {
+    --gap-1: 4px;
+    --gap-2: 4px;
+    --gap-3: 8px;
+    --gap-4: 8px;
+    --gap-5: 16px;
+    --gap-6: 20px;
+    --gap-7: 24px;
+    --gap-8: 40px;
+    --gap-9: 48px;
+    --gap-10: 60px;
+    --gap-11: 80px;
+    --gap-contents: 80px;
+    --gap-layout-margin-1: 100px;
+    --gap-layout-margin-2: 30px;
+    --gap-layout-margin-3: 102px;
+  }
+}
+
+/* ③ PC_1920 값 */
+@media (min-width: 1920px) {
+  :root {
+    --gap-1: 4px;
+    --gap-2: 8px;
+    --gap-3: 12px;
+    --gap-4: 16px;
+    --gap-5: 20px;
+    --gap-6: 24px;
+    --gap-7: 32px;
+    --gap-8: 40px;
+    --gap-9: 60px;
+    --gap-10: 80px;
+    --gap-11: 120px;
+    --gap-contents: 160px;
+    --gap-layout-margin-1: 202px;
+    --gap-layout-margin-2: 48px;
+    --gap-layout-margin-3: 194px;
+  }
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --font-sans: var(--font-noto-sans);
+
+  /* Custom font sizes */
+  --font-size-hero1: 80px;
+  --line-height-hero1: 120px;
+  --letter-spacing-hero1: -0.02em;
+
+  --font-size-hero2: 60px;
+  --line-height-hero2: 90px;
+  --letter-spacing-hero2: -0.02em;
+
+  --font-size-title1: 48px;
+  --line-height-title1: 72px;
+  --letter-spacing-title1: -0.02em;
+
+  --font-size-title2: 36px;
+  --line-height-title2: 54px;
+  --letter-spacing-title2: -0.02em;
+
+  --font-size-sub-title1: 32px;
+  --line-height-sub-title1: 48px;
+  --letter-spacing-sub-title1: -0.02em;
+
+  --font-size-sub-title2: 28px;
+  --line-height-sub-title2: 42px;
+  --letter-spacing-sub-title2: -0.02em;
+
+  --font-size-body1: 24px;
+  --line-height-body1: 36px;
+  --letter-spacing-body1: -0.02em;
+
+  --font-size-body2: 20px;
+  --line-height-body2: 30px;
+  --letter-spacing-body2: -0.02em;
+
+  --font-size-body3: 18px;
+  --line-height-body3: 26px;
+  --letter-spacing-body3: -0.02em;
+
+  --font-size-body4: 16px;
+  --line-height-body4: 24px;
+  --letter-spacing-body4: -0.02em;
+
+  --font-size-caption1: 14px;
+  --line-height-caption1: 22px;
+  --letter-spacing-caption1: -0.02em;
+
+  --font-size-caption2: 12px;
+  --line-height-caption2: 18px;
+  --letter-spacing-caption2: -0.02em;
+
+  /* Custom fonts - Next Font CSS 변수 사용 */
+  --font-pretendard: var(--font-pretendard);
+  /* --font-hanwha: var(--font-hanwha); */
+
+  /* 커스텀 색상 설정 */
+  /* primary colors */
+  --color-primary: #f60;
+  --color-primary-neutral: #ff7923;
+  --color-orange-100: #fff6eb;
+  --color-orange-200: #ffebcf;
+  --color-orange-300: #ffd19d;
+  --color-orange-400: #ffb85c;
+  --color-orange-500: #ff942a;
+  --color-orange-600: #ff7923;
+  --color-orange-700: #ff6600;
+
+  --color-gradient: #ff7f29;
+  --color-alternative: #5d5d5d;
+  --color-assistive: #888888;
+  --color-neutral: #454545;
+  --color-normal: #161616;
+  --color-fill-alternative: #f7f7f7;
+  --color-line-strong: #b0b0b0;
+  --color-line-normal: #d1d1d1;
+  --color-line-alternative: #e7e7e7;
+  --color-disabled: #efefef;
+  --color-primary-alternative: #ffd19d;
+  --color-primary-light: #fff6eb;
+  --color-primary-light1: #fff5ee;
+  --color-primary-normal: #f60;
+  --color-level-auth: #d53b00;
+  --color-level-gold: #caa100;
+  --color-level-platinum: #771bef;
+  --color-level-dia: #154ea0;
+  --color-focus: #f7f7f7;
+
+  /* badge colors */
+  --color-badge-new: #f60;
+  --color-badge-border-new: #ffd19d;
+  --color-badge-bg-new: #fff6eb;
+  --color-badge-cloud: #347fff;
+  --color-badge-border-cloud: #d2e2ff;
+  --color-badge-bg-cloud: #f5f9ff;
+  --color-badge-discontinued: #5d5d5d;
+  --color-badge-bg-discontinued: #f7f7f7;
+  --color-badge-border-discontinued: #d1d1d1;
+  --color-badge-eol: #5d5d5d;
+  --color-badge-bg-eol: #f7f7f7;
+  --color-badge-border-eol: #d1d1d1;
+
+  /* event badge colors */
+  --color-event-badge-ongoing: #279223;
+  --color-event-badge-bg-ongoing: #f4faf4;
+  --color-event-badge-border-ongoing: #b6dbb5;
+  --color-event-badge-upcoming: #347fff;
+  --color-event-badge-bg-upcoming: #f5f9ff;
+  --color-event-badge-border-upcoming: #c2d9ff;
+  --color-event-badge-closed: #f2274d;
+  --color-event-badge-border-closed: #fab6c3;
+  --color-event-badge-bg-closed: #fef4f6;
+
+  /* error state color */
+  --color-state-warning: #f2274d;
+  --color-state-green: #279223;
+  --color-state-blue: #347fff;
+
+  /* gray colors */
+  --color-gray-950: #161616;
+  --color-gray-800: #454545;
+  --color-gray-600: #5d5d5d;
+  --color-gray-400: #888888;
+  --color-gray-300: #b0b0b0;
+  --color-gray-250: #c1c1c1;
+  --color-gray-200: #d1d1d1;
+  --color-gray-100: #e7e7e7;
+  --color-gray-75: #efefef;
+  --color-gray-50: #f7f7f7;
+  --color-gray-0: #fff;
+  --color-fill-normal: #efefef;
+  --color-disable: #b0b0b0;
+  --color-assistive: #888;
+
+  /* dim colors */
+  --color-dim: rgba(22, 22, 22, 0.65);
+}
+
+/* Custom Typography Classes */
+.text-hero1 {
+  font-size: var(--font-size-hero1);
+  line-height: var(--line-height-hero1);
+  letter-spacing: var(--letter-spacing-hero1);
+}
+
+.text-hero2 {
+  font-size: var(--font-size-hero2);
+  line-height: var(--line-height-hero2);
+  letter-spacing: var(--letter-spacing-hero2);
+}
+
+.text-title1 {
+  font-size: var(--font-size-title1);
+  line-height: var(--line-height-title1);
+  letter-spacing: var(--letter-spacing-title1);
+}
+
+.text-title2 {
+  font-size: var(--font-size-title2);
+  line-height: var(--line-height-title2);
+  letter-spacing: var(--letter-spacing-title2);
+}
+
+.text-sub-title1 {
+  font-size: var(--font-size-sub-title1);
+  line-height: var(--line-height-sub-title1);
+  letter-spacing: var(--letter-spacing-sub-title1);
+}
+
+.text-sub-title2 {
+  font-size: var(--font-size-sub-title2);
+  line-height: var(--line-height-sub-title2);
+  letter-spacing: var(--letter-spacing-sub-title2);
+}
+
+.text-body1 {
+  font-size: var(--font-size-body1);
+  line-height: var(--line-height-body1);
+  letter-spacing: var(--letter-spacing-body1);
+}
+
+.text-body2 {
+  font-size: var(--font-size-body2);
+  line-height: var(--line-height-body2);
+  letter-spacing: var(--letter-spacing-body2);
+}
+
+.text-body3 {
+  font-size: var(--font-size-body3);
+  line-height: var(--line-height-body3);
+  letter-spacing: var(--letter-spacing-body3);
+}
+
+.text-body4 {
+  font-size: var(--font-size-body4);
+  line-height: var(--line-height-body4);
+  letter-spacing: var(--letter-spacing-body4);
+}
+
+.text-caption1 {
+  font-size: var(--font-size-caption1);
+  line-height: var(--line-height-caption1);
+  letter-spacing: var(--letter-spacing-caption1);
+}
+
+.text-caption2 {
+  font-size: var(--font-size-caption2);
+  line-height: var(--line-height-caption2);
+  letter-spacing: var(--letter-spacing-caption2);
+}
+
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}
+
+.scrollbar-hide {
+  -ms-overflow-style: none; /* IE, Edge */
+  scrollbar-width: none; /* Firefox */
+}
+
+body {
+  color: var(--foreground);
+  font-weight: 400; /* 기본 weight */
+  /* 모든 언어에 Pretendard를 기본 폰트로 사용 */
+  font-family: var(--font-pretendard), sans-serif;
+}
