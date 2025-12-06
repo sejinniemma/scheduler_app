@@ -126,82 +126,42 @@
   /* --font-hanwha: var(--font-hanwha); */
 
   /* 커스텀 색상 설정 */
-  /* primary colors */
-  --color-primary: #f60;
-  --color-primary-neutral: #ff7923;
-  --color-orange-100: #fff6eb;
-  --color-orange-200: #ffebcf;
-  --color-orange-300: #ffd19d;
-  --color-orange-400: #ffb85c;
-  --color-orange-500: #ff942a;
-  --color-orange-600: #ff7923;
-  --color-orange-700: #ff6600;
 
-  --color-gradient: #ff7f29;
-  --color-alternative: #5d5d5d;
-  --color-assistive: #888888;
-  --color-neutral: #454545;
-  --color-normal: #161616;
-  --color-fill-alternative: #f7f7f7;
-  --color-line-strong: #b0b0b0;
-  --color-line-normal: #d1d1d1;
-  --color-line-alternative: #e7e7e7;
-  --color-disabled: #efefef;
-  --color-primary-alternative: #ffd19d;
-  --color-primary-light: #fff6eb;
-  --color-primary-light1: #fff5ee;
-  --color-primary-normal: #f60;
-  --color-level-auth: #d53b00;
-  --color-level-gold: #caa100;
-  --color-level-platinum: #771bef;
-  --color-level-dia: #154ea0;
-  --color-focus: #f7f7f7;
+  /* text colors */
+  --color-text-dark: #595959;
+  --color-text-default: #797979;
+  --color-text-secondary: #959595;
+  --color-text-tertiary: #979797;
+  --color-text-disabled: #ababab;
 
-  /* badge colors */
-  --color-badge-new: #f60;
-  --color-badge-border-new: #ffd19d;
-  --color-badge-bg-new: #fff6eb;
-  --color-badge-cloud: #347fff;
-  --color-badge-border-cloud: #d2e2ff;
-  --color-badge-bg-cloud: #f5f9ff;
-  --color-badge-discontinued: #5d5d5d;
-  --color-badge-bg-discontinued: #f7f7f7;
-  --color-badge-border-discontinued: #d1d1d1;
-  --color-badge-eol: #5d5d5d;
-  --color-badge-bg-eol: #f7f7f7;
-  --color-badge-border-eol: #d1d1d1;
+  /* background colors */
+  --color-bg-light: #f7f7f7;
+  --color-bg-lighter: #f5f5f5;
+  --color-bg-white: #fff;
 
-  /* event badge colors */
-  --color-event-badge-ongoing: #279223;
-  --color-event-badge-bg-ongoing: #f4faf4;
-  --color-event-badge-border-ongoing: #b6dbb5;
-  --color-event-badge-upcoming: #347fff;
-  --color-event-badge-bg-upcoming: #f5f9ff;
-  --color-event-badge-border-upcoming: #c2d9ff;
-  --color-event-badge-closed: #f2274d;
-  --color-event-badge-border-closed: #fab6c3;
-  --color-event-badge-bg-closed: #fef4f6;
+  /* border colors */
+  --color-border-subtle: #f7f7f7;
+  --color-border-very-light: #f5f5f5;
+  --color-border-light: #ececec;
+  --color-border-base: #e1e1e1;
+  --color-border-medium: #d7d7d7;
+  --color-border-strong: #d1d5dc;
 
-  /* error state color */
-  --color-state-warning: #f2274d;
-  --color-state-green: #279223;
-  --color-state-blue: #347fff;
+  /* Color Palette */
+  --color-blue: #3b82f6;
+  --color-blue-deep: #4582ed;
+  --color-blue-admin: #155dfc;
+  --color-green: #00a63e;
+  --color-green-light: #00bd79;
+  --color-yellow: #ff9000;
+  --color-red: #ef4452;
+  --color-red-bright: #e7000b;
+  --color-red-dark: #d22c2c;
 
-  /* gray colors */
-  --color-gray-950: #161616;
-  --color-gray-800: #454545;
-  --color-gray-600: #5d5d5d;
-  --color-gray-400: #888888;
-  --color-gray-300: #b0b0b0;
-  --color-gray-250: #c1c1c1;
-  --color-gray-200: #d1d1d1;
-  --color-gray-100: #e7e7e7;
-  --color-gray-75: #efefef;
-  --color-gray-50: #f7f7f7;
-  --color-gray-0: #fff;
-  --color-fill-normal: #efefef;
-  --color-disable: #b0b0b0;
-  --color-assistive: #888;
+  --color-black: #101828;
+
+  /* Select Box */
+  --color-required: #fb2c36;
 
   /* dim colors */
   --color-dim: rgba(22, 22, 22, 0.65);
