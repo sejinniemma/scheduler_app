@@ -1,17 +1,11 @@
 import ProgressBar from '@/src/components/ProgressBar';
-import Image from 'next/image';
+import ReportCard, { Report } from '@/src/components/ReportCard';
 
 interface Schedule {
   time: string;
   location: string;
   currentStep: 0 | 1 | 2 | 3;
   status: 'pending' | 'ongoing' | 'upcoming' | 'completed' | 'canceled';
-}
-
-interface Report {
-  title: string;
-  description: string;
-  icon: string;
 }
 
 const MainPage = () => {
@@ -99,28 +93,7 @@ const MainPage = () => {
       {/* 보고 List */}
       <div className='grid grid-cols-2 gap-[10px] w-full'>
         {reports.map((report, index) => (
-          <div
-            key={index}
-            className='flex flex-col gap-[8px] w-full h-[130px] p-[12px] bg-white border border-line-edge rounded-xl cursor-pointer'
-            style={{ boxShadow: '0 2px 2px 0 rgba(0, 0, 0, 0.05)' }}
-          >
-            <h2 className='text-body4 text-normal-strong font-bold'>
-              {report.title}
-            </h2>
-            <p className='text-caption2 text-tertiary font-medium whitespace-pre-line'>
-              {report.description}
-            </p>
-
-            <div className='relative flex justify-end w-full'>
-              <Image
-                src={report.icon}
-                alt={report.title}
-                width={32}
-                height={32}
-                className='object-contain'
-              />
-            </div>
-          </div>
+          <ReportCard key={index} report={report} />
         ))}
       </div>
     </section>
