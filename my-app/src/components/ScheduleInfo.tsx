@@ -4,6 +4,7 @@ export interface ScheduleInfoData {
   groom: string;
   bride: string;
   date: string;
+  location?: string;
   memo: string;
 }
 
@@ -41,7 +42,7 @@ const ScheduleInfo = ({ schedule }: ScheduleInfoProps) => {
       </div>
 
       {/* 날짜정보 */}
-      <div className='flex items-center gap-[6px] pb-[10px] border-b border-lighter w-full'>
+      <div className='flex items-center gap-[6px] py-[10px] border-b border-lighter w-full'>
         <Image
           src='/images/icons/calendar.png'
           alt='calendar'
@@ -51,8 +52,20 @@ const ScheduleInfo = ({ schedule }: ScheduleInfoProps) => {
         <p className='text-caption1 text-normal font-medium'>{schedule.date}</p>
       </div>
 
+      {/* location */}
+      <div className='flex items-center gap-[6px] pt-[10px] w-full'>
+        <Image
+          src='/images/icons/arrival.png'
+          alt='location'
+          width={16}
+          height={16}
+        />
+        <p className='text-caption1 text-normal font-medium'>
+          {schedule.location || '강동 kdw 웨딩 3층 블랙스톤홀 (바모)'}
+        </p>
+      </div>
       {/* memo */}
-      <div className='flex items-center gap-[6px] w-full'>
+      <div className='flex items-center gap-[6px] pt-[10px] w-full'>
         <Image src='/images/icons/memo.png' alt='memo' width={16} height={16} />
         <p className='text-caption1 text-normal font-medium'>{schedule.memo}</p>
       </div>
