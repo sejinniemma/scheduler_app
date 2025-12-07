@@ -20,16 +20,16 @@ export default function Home() {
         </div>
 
         {/* Login Form */}
-        <div className='flex flex-col items-center w-[260px] gap-[20px]'>
+        <div className='flex flex-col items-center w-[260px] gap-[30px]'>
           <input
             type='text'
             placeholder='이름'
-            className='w-full h-[40px] border border-light rounded-md p-[--var(--gap-7)]'
+            className='w-full h-[40px] text-caption1 font-medium text-default border-0 border-b border-base focus:outline-none focus:border-b p-[--var(--gap-7)]'
           />
           <input
             type='password'
-            placeholder='Password'
-            className='w-full h-[40px] border border-light rounded-md p-[--var(--gap-7)]'
+            placeholder='번호(-없이)'
+            className='w-full h-[40px] text-caption1 font-medium text-default border-0 border-b border-base focus:outline-none focus:border-b p-[--var(--gap-7)]'
           />
           <Button text='로그인' />
         </div>
