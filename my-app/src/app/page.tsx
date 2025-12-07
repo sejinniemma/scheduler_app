@@ -24,12 +24,12 @@ export default function Home() {
           <input
             type='text'
             placeholder='이름'
-            className='w-full h-[40px] text-caption1 font-medium text-default border-0 border-b border-base focus:outline-none focus:border-b p-[--var(--gap-7)]'
+            className='w-full h-[40px] text-caption1 font-medium text-default border-0 border-b border-line-base focus:outline-none focus:border-b p-[--var(--gap-7)]'
           />
           <input
             type='password'
             placeholder='번호(-없이)'
-            className='w-full h-[40px] text-caption1 font-medium text-default border-0 border-b border-base focus:outline-none focus:border-b p-[--var(--gap-7)]'
+            className='w-full h-[40px] text-caption1 font-medium text-default border-0 border-b border-line-base focus:outline-none focus:border-b p-[--var(--gap-7)]'
           />
           <Button text='로그인' />
         </div>

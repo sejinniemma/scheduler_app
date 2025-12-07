@@ -79,10 +79,13 @@
   --color-white: #fff;
 
   /* border colors */
-  --color-edge: #ececec;
-  --color-base: #e1e1e1;
-  --color-medium: #d7d7d7;
-  --color-strong: #d1d5dc;
+  --color-line-edge: #ececec;
+  --color-line-base: #e1e1e1;
+  --color-line-medium: #d7d7d7;
+  --color-line-strong: #d1d5dc;
+
+  /* progress bar colors */
+  --color-progress-bar-background: #e6e6e6;
 
   /* Color Palette */
   --color-blue: #3b82f6;
