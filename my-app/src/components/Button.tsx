@@ -16,7 +16,7 @@ export default function Button({
     <button
       type={type}
       onClick={onClick}
-      className={`w-full h-[40px] p-[10px] text-body4 font-semibold bg-blue text-white rounded-[10px] cursor-pointer transition-all duration-200 hover:opacity-90 hover:shadow-lg ${className}`}
+      className={`w-full h-[40px] p-[10px] mt-[30px] text-body4 font-semibold bg-blue text-white rounded-[10px] cursor-pointer transition-all duration-200 hover:opacity-90 hover:shadow-lg ${className}`}
       style={{
         boxShadow: '0 4px 4px 0 rgba(59, 130, 246, 0.20)',
       }}

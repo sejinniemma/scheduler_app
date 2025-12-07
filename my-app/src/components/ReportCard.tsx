@@ -1,9 +1,13 @@
+'use client';
+
 import Image from 'next/image';
+import { useRouter } from 'next/navigation';
 
 export interface Report {
   title: string;
   description: string;
   icon: string;
+  href: string;
 }
 
 interface ReportCardProps {
@@ -11,8 +15,10 @@ interface ReportCardProps {
 }
 
 const ReportCard = ({ report }: ReportCardProps) => {
+  const router = useRouter();
   return (
     <div
+      onClick={() => router.push(report.href)}
       className='flex flex-col gap-[8px] w-full h-[130px] p-[12px] bg-white border border-line-edge rounded-xl cursor-pointer'
       style={{ boxShadow: '0 2px 2px 0 rgba(0, 0, 0, 0.05)' }}
     >

@@ -13,7 +13,10 @@ const MobileLayout = ({
   return (
     <section
       id={id}
-      className={cn('max-w-[375px] h-[600px]  mx-auto w-full', className)}
+      className={cn(
+        'max-w-[394px] h-[600px] bg-lighter  mx-auto w-full',
+        className
+      )}
     >
       {children}
     </section>
