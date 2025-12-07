@@ -67,11 +67,13 @@
 
   /* text colors */
   --color-normal: #111111;
+  --color-normal-strong: #000;
   --color-dark: #595959;
   --color-default: #797979;
   --color-secondary: #959595;
   --color-tertiary: #979797;
-  --color-disabled: #ababab;
+  /* --color-disabled: #ababab; */
+  --color-disabled: #dadada;
 
   /* background colors */
   --color-light: #f7f7f7;
