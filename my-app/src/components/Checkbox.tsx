@@ -33,8 +33,7 @@ const Checkbox = ({
       style={{
         width: `${size}px`,
         height: `${size}px`,
-        backgroundColor: checked ? '#E5E8EB' : '#E5E8EB',
-        border: 'none',
+        backgroundColor: checked ? 'var(--color-green-light)' : '#E5E8EB',
         cursor: 'pointer',
       }}
     >
@@ -47,7 +46,7 @@ const Checkbox = ({
       >
         <path
           d='M11.6667 3.5L5.25 9.91667L2.33334 7'
-          stroke={checked ? '#313D4C' : 'white'}
+          stroke={checked ? 'white' : '#313D4C'}
           strokeWidth='2'
           strokeLinecap='round'
           strokeLinejoin='round'

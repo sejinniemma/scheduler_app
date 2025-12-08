@@ -4,10 +4,24 @@ import MainSection from '@/src/components/MainSection';
 import PageHeader from '@/src/components/PageHeader';
 import ScheduleInfo from '@/src/components/ScheduleInfo';
 import MobileLayout from '@/src/layout/MobileLayout';
-import Checkbox from '@/src/components/Checkbox';
-import React from 'react';
+import CheckboxList, { CheckboxItemData } from '@/src/components/CheckboxList';
+import React, { useState } from 'react';
 
 const CompletedReportPage = () => {
+  const [checkboxItems, setCheckboxItems] = useState<CheckboxItemData[]>([
+    {
+      id: '1',
+      label: '특이사항이 있어요',
+      checked: false,
+    },
+  ]);
+
+  const handleCheckboxChange = (id: string, checked: boolean) => {
+    setCheckboxItems((prev) =>
+      prev.map((item) => (item.id === id ? { ...item, checked } : item))
+    );
+  };
+
   return (
     <MobileLayout>
       <PageHeader title='종료 보고' />
@@ -32,12 +46,12 @@ const CompletedReportPage = () => {
           }}
         />
 
-        <div className='flex items-center gap-[10px] mt-[12px] border bg-white border-line-edge rounded-xl py-[15px] px-[20px]'>
-          <Checkbox size={18} />
-          <p className='text-caption1 text-normal-strong font-medium'>
-            특이사항이 있어요
-          </p>
-        </div>
+        <CheckboxList
+          items={checkboxItems}
+          onChange={handleCheckboxChange}
+          size={16}
+          className='mt-[12px]'
+        />
 
         <Button text='촬영 종료 보고하기' />
       </ContentLayout>

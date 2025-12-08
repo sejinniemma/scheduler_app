@@ -1,15 +1,40 @@
 'use client';
+import CheckboxList, { CheckboxItemData } from '@/src/components/CheckboxList';
 import ContentLayout from '@/src/components/ContentLayout';
 import MainSection from '@/src/components/MainSection';
 import PageHeader from '@/src/components/PageHeader';
 import ScheduleInfo from '@/src/components/ScheduleInfo';
 import TimePickerWheel from '@/src/components/TimePickerWheel';
 import MobileLayout from '@/src/layout/MobileLayout';
-import React from 'react';
+import React, { useState } from 'react';
 
 const DepartureReportPage = () => {
   const handleTimeChange = (h: number, m: number) => {
     console.log('선택된 도착 예정 시간:', h, m);
+  };
+
+  const [checkboxItems, setCheckboxItems] = useState<CheckboxItemData[]>([
+    {
+      id: '1',
+      label: '촬영 장비 (카메라, 렌즈, 플래시)',
+      checked: false,
+    },
+    {
+      id: '2',
+      label: '메모리 & 전원 (메모리카드, 배터리)',
+      checked: false,
+    },
+    {
+      id: '3',
+      label: '충전기 & 여분품',
+      checked: false,
+    },
+  ]);
+
+  const handleCheckboxChange = (id: string, checked: boolean) => {
+    setCheckboxItems((prev) =>
+      prev.map((item) => (item.id === id ? { ...item, checked } : item))
+    );
   };
 
   return (
@@ -31,6 +56,7 @@ const DepartureReportPage = () => {
 
           <TimePickerWheel onChange={handleTimeChange} />
 
+          <CheckboxList items={checkboxItems} onChange={handleCheckboxChange} />
           <ScheduleInfo
             schedule={{
               groom: '송명철',
