@@ -10,3 +10,4 @@ const ContentLayout = ({ children }: ContentLayoutProps) => {
 
 export default ContentLayout;
 
+

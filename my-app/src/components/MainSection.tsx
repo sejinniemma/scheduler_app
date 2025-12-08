@@ -27,3 +27,4 @@ const MainSection = ({ icon, title, description }: MainSectionProps) => {
 };
 
 export default MainSection;
+
