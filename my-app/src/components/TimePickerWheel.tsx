@@ -1,26 +1,34 @@
 'use client';
 import { useRef, useState, useEffect } from 'react';
 
-export default function TimePickerWheel({ onChange }) {
+interface TimePickerWheelProps {
+  onChange?: (hour: number, minute: number) => void;
+}
+
+interface ScrollableRef extends React.RefObject<HTMLDivElement> {
+  scrollTimer?: NodeJS.Timeout;
+}
+
+export default function TimePickerWheel({ onChange }: TimePickerWheelProps) {
   const hours = Array.from({ length: 24 }, (_, i) => i);
   const minutes = Array.from({ length: 60 }, (_, i) => i);
 
   const [hour, setHour] = useState(10);
   const [minute, setMinute] = useState(35);
 
-  const hourRef = useRef<HTMLDivElement>(null);
-  const minRef = useRef<HTMLDivElement>(null);
+  const hourRef = useRef<HTMLDivElement>(null) as ScrollableRef;
+  const minRef = useRef<HTMLDivElement>(null) as ScrollableRef;
 
   const ITEM_HEIGHT = 36; // UI 이미지 기준으로 알맞게 조정
 
-  const scrollToIndex = (ref: any, index: number) => {
+  const scrollToIndex = (ref: ScrollableRef, index: number) => {
     ref.current?.scrollTo({
       top: index * ITEM_HEIGHT,
       behavior: 'smooth',
     });
   };
 
-  const onScrollEnd = (ref: any, type: 'hour' | 'min') => {
+  const onScrollEnd = (ref: ScrollableRef, type: 'hour' | 'min') => {
     const scrollTop = ref.current.scrollTop;
     const index = Math.round(scrollTop / ITEM_HEIGHT);
 
@@ -39,6 +47,7 @@ export default function TimePickerWheel({ onChange }) {
   useEffect(() => {
     scrollToIndex(hourRef, hour);
     scrollToIndex(minRef, minute);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   return (
@@ -57,8 +66,10 @@ export default function TimePickerWheel({ onChange }) {
             msOverflowStyle: 'none',
           }}
           onScroll={() => {
-            clearTimeout((hourRef as any).scrollTimer);
-            (hourRef as any).scrollTimer = setTimeout(
+            if (hourRef.scrollTimer) {
+              clearTimeout(hourRef.scrollTimer);
+            }
+            hourRef.scrollTimer = setTimeout(
               () => onScrollEnd(hourRef, 'hour'),
               120
             );
@@ -98,8 +109,10 @@ export default function TimePickerWheel({ onChange }) {
             msOverflowStyle: 'none',
           }}
           onScroll={() => {
-            clearTimeout((minRef as any).scrollTimer);
-            (minRef as any).scrollTimer = setTimeout(
+            if (minRef.scrollTimer) {
+              clearTimeout(minRef.scrollTimer);
+            }
+            minRef.scrollTimer = setTimeout(
               () => onScrollEnd(minRef, 'min'),
               120
             );

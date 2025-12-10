@@ -8,14 +8,16 @@ const ScheduleSchema = new mongoose.Schema(
       default: () => new mongoose.Types.ObjectId().toString(),
     },
     mainUser: {
-      type: mongoose.Schema.Types.ObjectId,
+      type: String,
       ref: 'User',
       required: true,
+      unique: true,
     },
     subUser: {
-      type: mongoose.Schema.Types.ObjectId,
+      type: String,
       ref: 'User',
       required: true,
+      unique: true,
     },
     groom: { type: String, required: true },
     bride: { type: String, required: true },
@@ -24,7 +26,8 @@ const ScheduleSchema = new mongoose.Schema(
       type: String, // "11:30"
       required: true,
     },
-    location: { type: String },
+    location: { type: String }, // 실 주소 (예: "노원구 섬밭로 258 건영옴니백화점")
+    venue: { type: String }, // 장소명 (예: "노원 비엔티 컨벤션 6층 단독홀")
     memo: { type: String },
     status: {
       type: String,
@@ -44,8 +47,6 @@ const ScheduleSchema = new mongoose.Schema(
       enum: ['unassigned', 'assigned', 'completed'],
       default: 'unassigned',
     },
-
-    currentStep: { type: Number, enum: [0, 1, 2, 3], default: 0 },
   },
   { timestamps: true }
 );

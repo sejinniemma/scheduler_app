@@ -1,32 +1,16 @@
+import { gql } from '@apollo/client';
+
 // Schedule Queries
 export const GET_SCHEDULES = gql`
-  query GetSchedules {
-    schedules {
+  query GetSchedules($date: String, $subStatus: String) {
+    schedules(date: $date, subStatus: $subStatus) {
       id
-      groom
-      bride
-      date
+      time
       location
-      memo
-      status
-      currentStep
-      createdAt
-    }
-  }
-`;
-
-export const GET_SCHEDULE = gql`
-  query GetSchedule($id: ID!) {
-    schedule(id: $id) {
-      id
-      groom
-      bride
+      venue
       date
-      location
-      memo
       status
-      currentStep
-      createdAt
+      subStatus
     }
   }
 `;

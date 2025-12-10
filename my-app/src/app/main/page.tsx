@@ -1,34 +1,20 @@
-'use client';
-
-import ProgressBar from '@/src/components/ProgressBar';
 import ReportCard, { Report } from '@/src/components/ReportCard';
 import MobileLayout from '@/src/layout/MobileLayout';
-import { useSession } from 'next-auth/react';
+import { getServerSession } from 'next-auth';
+import { getTodaySchedules } from '@/src/lib/schedules';
+import { ScheduleListLoading } from '@/src/components/ScheduleList';
+import ScheduleListWrapper from '@/src/components/ScheduleListWrapper';
+import ScheduleCount from '@/src/components/ScheduleCount';
+import { Suspense } from 'react';
+import { authOptions } from '@/src/lib/auth';
+import { NextAuthOptions } from 'next-auth';
 
-interface Schedule {
-  time: string;
-  location: string;
-  currentStep: 0 | 1 | 2 | 3;
-  status: 'pending' | 'ongoing' | 'upcoming' | 'completed' | 'canceled';
-}
-
-const MainPage = () => {
-  const { data: session } = useSession();
+const MainPage = async () => {
+  const session = await getServerSession(authOptions as NextAuthOptions);
   const userName = session?.user?.name || '';
-  const schedules: Schedule[] = [
-    {
-      time: '11:30',
-      location: '영등포 해군호텔 2충 노블레스 홀 (라이트댓)',
-      currentStep: 2,
-      status: 'ongoing',
-    },
-    {
-      time: '14:00',
-      location: '강남 컨벤션센터 그랜드홀',
-      currentStep: 0,
-      status: 'completed',
-    },
-  ];
+
+  // 서버에서 스케줄 데이터 가져오기 (Promise로 전달하여 스트리밍 가능)
+  const schedulesPromise = getTodaySchedules();
 
   const reports: Report[] = [
     {
@@ -73,34 +59,20 @@ const MainPage = () => {
             <h1 className='text-body4 text-normal font-semibold'>
               {userName ? `${userName}님, ` : ''}금일 스케쥴 진행상황
             </h1>
-            <span className='text-caption2 text-default'>
-              총 {schedules.length}건
-            </span>
+            <Suspense
+              fallback={
+                <span className='text-caption2 text-default'>총 ...건</span>
+              }
+            >
+              <ScheduleCount schedulesPromise={schedulesPromise} />
+            </Suspense>
           </div>
 
           {/* Schedule List */}
           <div className='flex flex-col gap-[20px]'>
-            {schedules.map((schedule, index) => (
-              <div key={index} className='flex flex-col gap-[20px]'>
-                {/* Schedule Info */}
-                <div
-                  className={`flex items-center text-caption1 gap-[10px] ${
-                    schedule.status === 'ongoing'
-                      ? 'text-dark'
-                      : 'text-disabled'
-                  }`}
-                >
-                  <span>{schedule.time}</span>
-                  <p>{schedule.location}</p>
-                </div>
-
-                {/* Progress Bar */}
-                <ProgressBar
-                  currentStep={schedule.currentStep}
-                  disabled={schedule.status !== 'ongoing'}
-                />
-              </div>
-            ))}
+            <Suspense fallback={<ScheduleListLoading />}>
+              <ScheduleListWrapper schedulesPromise={schedulesPromise} />
+            </Suspense>
           </div>
         </div>
 

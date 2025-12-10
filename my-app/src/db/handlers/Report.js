@@ -12,6 +12,7 @@ export const typeDefs = gql`
     schedule: ID!
     user: ID!
     status: String!
+    currentStep: Int!
     memo: String
     reportedAt: DateTime!
     createdAt: DateTime!
@@ -29,10 +30,11 @@ export const typeDefs = gql`
     createReport(
       scheduleId: ID!
       status: String!
+      currentStep: Int
       memo: String
     ): Report!
 
-    updateReport(id: ID!, status: String, memo: String): Report!
+    updateReport(id: ID!, status: String, currentStep: Int, memo: String): Report!
 
     deleteReport(id: ID!): Boolean!
   }
@@ -76,8 +78,8 @@ export const resolvers = {
         throw new Error('스케줄을 찾을 수 없습니다.');
       }
       if (
-        schedule.mainUser.toString() !== context.user.id &&
-        schedule.subUser.toString() !== context.user.id
+        schedule.mainUser !== context.user.id &&
+        schedule.subUser !== context.user.id
       ) {
         throw new Error('권한이 없습니다.');
       }
@@ -100,7 +102,7 @@ export const resolvers = {
   Mutation: {
     createReport: async (
       parent,
-      { scheduleId, status, memo },
+      { scheduleId, status, currentStep = 0, memo },
       context
     ) => {
       if (!context.user) {
@@ -116,8 +118,8 @@ export const resolvers = {
 
       // 본인이 mainUser 또는 subUser인지 확인
       if (
-        schedule.mainUser.toString() !== context.user.id &&
-        schedule.subUser.toString() !== context.user.id
+        schedule.mainUser !== context.user.id &&
+        schedule.subUser !== context.user.id
       ) {
         throw new Error('권한이 없습니다.');
       }
@@ -127,6 +129,7 @@ export const resolvers = {
         schedule: schedule._id,
         user: context.user.id,
         status,
+        currentStep,
         memo,
       });
 
@@ -137,7 +140,7 @@ export const resolvers = {
       return await report.save();
     },
 
-    updateReport: async (parent, { id, status, memo }, context) => {
+    updateReport: async (parent, { id, status, currentStep, memo }, context) => {
       if (!context.user) {
         throw new Error('인증이 필요합니다.');
       }
@@ -151,6 +154,7 @@ export const resolvers = {
         throw new Error('권한이 없습니다.');
       }
       if (status) report.status = status;
+      if (currentStep !== undefined) report.currentStep = currentStep;
       if (memo !== undefined) report.memo = memo;
       return await report.save();
     },

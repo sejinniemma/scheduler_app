@@ -1,3 +1,4 @@
+'use client';
 import Button from '@/src/components/Button';
 import ContentLayout from '@/src/components/ContentLayout';
 import MainSection from '@/src/components/MainSection';

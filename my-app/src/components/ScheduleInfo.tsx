@@ -4,7 +4,8 @@ export interface ScheduleInfoData {
   groom: string;
   bride: string;
   date: string;
-  location?: string;
+  location?: string; // 실 주소
+  venue?: string; // 장소명
   memo: string;
 }
 
@@ -52,18 +53,34 @@ const ScheduleInfo = ({ schedule }: ScheduleInfoProps) => {
         <p className='text-caption1 text-normal font-medium'>{schedule.date}</p>
       </div>
 
-      {/* location */}
-      <div className='flex items-center gap-[6px] pt-[10px] w-full'>
-        <Image
-          src='/images/icons/arrival.png'
-          alt='location'
-          width={16}
-          height={16}
-        />
-        <p className='text-caption1 text-normal font-medium'>
-          {schedule.location || '강동 kdw 웨딩 3층 블랙스톤홀 (바모)'}
-        </p>
-      </div>
+      {/* venue (장소명) */}
+      {schedule.venue && (
+        <div className='flex items-center gap-[6px] pt-[10px] w-full'>
+          <Image
+            src='/images/icons/arrival.png'
+            alt='venue'
+            width={16}
+            height={16}
+          />
+          <p className='text-caption1 text-normal font-medium'>
+            {schedule.venue}
+          </p>
+        </div>
+      )}
+      {/* location (실 주소) */}
+      {schedule.location && (
+        <div className='flex items-center gap-[6px] pt-[10px] w-full'>
+          <Image
+            src='/images/icons/arrival.png'
+            alt='location'
+            width={16}
+            height={16}
+          />
+          <p className='text-caption1 text-normal font-medium'>
+            {schedule.location}
+          </p>
+        </div>
+      )}
       {/* memo */}
       <div className='flex items-center gap-[6px] pt-[10px] w-full'>
         <Image src='/images/icons/memo.png' alt='memo' width={16} height={16} />

@@ -14,16 +14,16 @@ export const typeDefs = gql`
     date: String!
     time: String!
     location: String
+    venue: String
     memo: String
     status: String!
     subStatus: String!
-    currentStep: Int!
     createdAt: DateTime!
     updatedAt: DateTime!
   }
 
   type Query {
-    schedules: [Schedule!]!
+    schedules(date: String, subStatus: String): [Schedule!]!
     schedule(id: ID!): Schedule
   }
 
@@ -36,10 +36,10 @@ export const typeDefs = gql`
       date: String!
       time: String!
       location: String
+      venue: String
       memo: String
       status: String
       subStatus: String
-      currentStep: Int
     ): Schedule!
 
     updateSchedule(
@@ -51,10 +51,10 @@ export const typeDefs = gql`
       date: String
       time: String
       location: String
+      venue: String
       memo: String
       status: String
       subStatus: String
-      currentStep: Int
     ): Schedule!
 
     deleteSchedule(id: ID!): Boolean!
@@ -63,15 +63,29 @@ export const typeDefs = gql`
 
 export const resolvers = {
   Query: {
-    schedules: async (parent, args, context) => {
+    schedules: async (parent, { date, subStatus }, context) => {
       if (!context.user) {
         throw new Error('인증이 필요합니다.');
       }
       await connectToDatabase();
-      // 로그인한 사용자가 mainUser 또는 subUser인 스케줄만 조회
-      return await Schedule.find({
+
+      // 기본 쿼리: 로그인한 사용자가 mainUser 또는 subUser인 스케줄만 조회
+      const query = {
         $or: [{ mainUser: context.user.id }, { subUser: context.user.id }],
-      });
+      };
+
+      // 필터 추가
+      if (date) {
+        query.date = date;
+      }
+      if (subStatus) {
+        query.subStatus = subStatus;
+      }
+
+      const schedules = await Schedule.find(query);
+
+      // time 기준 정렬 (더 빠른 시간이 앞에)
+      return schedules.sort((a, b) => a.time.localeCompare(b.time));
     },
 
     schedule: async (parent, { id }, context) => {
@@ -85,8 +99,8 @@ export const resolvers = {
       }
       // 본인이 mainUser 또는 subUser인지 확인
       if (
-        schedule.mainUser.toString() !== context.user.id &&
-        schedule.subUser.toString() !== context.user.id
+        schedule.mainUser !== context.user.id &&
+        schedule.subUser !== context.user.id
       ) {
         throw new Error('권한이 없습니다.');
       }
@@ -105,10 +119,10 @@ export const resolvers = {
         date,
         time,
         location,
+        venue,
         memo,
         status = 'pending',
         subStatus = 'unassigned',
-        currentStep = 0,
       },
       context
     ) => {
@@ -124,10 +138,10 @@ export const resolvers = {
         date,
         time,
         location,
+        venue,
         memo,
         status,
         subStatus,
-        currentStep,
       });
       return await schedule.save();
     },
@@ -143,8 +157,8 @@ export const resolvers = {
       }
       // 본인이 mainUser 또는 subUser인지 확인
       if (
-        schedule.mainUser.toString() !== context.user.id &&
-        schedule.subUser.toString() !== context.user.id
+        schedule.mainUser !== context.user.id &&
+        schedule.subUser !== context.user.id
       ) {
         throw new Error('권한이 없습니다.');
       }
@@ -163,8 +177,8 @@ export const resolvers = {
       }
       // 본인이 mainUser 또는 subUser인지 확인
       if (
-        schedule.mainUser.toString() === context.user.id ||
-        schedule.subUser.toString() === context.user.id
+        schedule.mainUser === context.user.id ||
+        schedule.subUser === context.user.id
       ) {
         await Schedule.findOneAndDelete({ id });
         return true;
