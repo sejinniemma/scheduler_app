@@ -8,6 +8,7 @@ export interface Report {
   description: string;
   icon: string;
   href: string;
+  disabled?: boolean;
 }
 
 interface ReportCardProps {
@@ -18,9 +19,14 @@ const ReportCard = ({ report }: ReportCardProps) => {
   const router = useRouter();
   return (
     <div
-      onClick={() => router.push(report.href)}
-      className='flex flex-col gap-[8px] w-full h-[130px] p-[12px] bg-white border border-line-edge rounded-xl cursor-pointer'
-      style={{ boxShadow: '0 2px 2px 0 rgba(0, 0, 0, 0.05)' }}
+      onClick={() => !report.disabled && router.push(report.href)}
+      className={`flex flex-col gap-[8px] w-full h-[130px] p-[12px] border border-line-edge rounded-xl ${
+        report.disabled ? 'cursor-not-allowed' : 'cursor-pointer'
+      }`}
+      style={{
+        backgroundColor: report.disabled ? '#DFDFDF' : '#fff',
+        boxShadow: report.disabled ? 'none' : '0 2px 2px 0 rgba(0, 0, 0, 0.05)',
+      }}
     >
       <h2 className='text-body4 text-normal-strong font-bold'>
         {report.title}

@@ -26,30 +26,54 @@ const MainPage = () => {
     currentStep: 0 as 0 | 1 | 2 | 3,
   }));
 
+  // 스케줄의 status를 확인하여 보고 완료 여부 판단
+  const getReportStatus = (reportType: string) => {
+    if (schedules.length === 0) return false;
+
+    const scheduleStatus = schedules[0].status;
+
+    switch (reportType) {
+      case 'wakeup':
+        return scheduleStatus === 'wakeup';
+      case 'departure':
+        return scheduleStatus === 'departure';
+      case 'arrival':
+        return scheduleStatus === 'arrival';
+      case 'completed':
+        return scheduleStatus === 'completed';
+      default:
+        return false;
+    }
+  };
+
   const reports: Report[] = [
     {
       title: '기상 보고',
       description: `오늘의 스케줄을 보고\n기상을 보고 할 수 있어요`,
       icon: '/images/icons/alarm.png',
       href: '/morning-report',
+      disabled: getReportStatus('wakeup'),
     },
     {
       title: '출발 보고',
       description: '오늘 스케줄을 보고\n출발을 보고 할 수 있어요',
       icon: '/images/icons/departure.png',
       href: '/departure-report',
+      disabled: getReportStatus('departure'),
     },
     {
       title: '도착 보고',
       description: '촬영 장소에 도착하셨나요?\n 도착 보고를 할 수 있어요',
       icon: '/images/icons/arrival.png',
       href: '/arrival-report',
+      disabled: getReportStatus('arrival'),
     },
     {
       title: '종료 보고',
       description: '촬영을 마치 셨나요?\n 종료 보고를 할 수 있어요',
       icon: '/images/icons/completed.png',
       href: '/completed-report',
+      disabled: getReportStatus('completed'),
     },
     {
       title: '내 스케줄 확정/확인',
