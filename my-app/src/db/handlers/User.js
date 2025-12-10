@@ -10,11 +10,14 @@ export const typeDefs = gql`
     name: String!
     phone: String!
     role: String!
+    gender: String
     address: String
     mainLocation: String
     hasVehicle: Boolean
     startDate: DateTime
     birthDate: DateTime
+    status: String
+    memo: String
     createdAt: DateTime
     updatedAt: DateTime
   }
@@ -34,7 +37,11 @@ export const typeDefs = gql`
       role: String
       hasVehicle: Boolean
       birthDate: DateTime
+      gender: String
+      status: String
+      memo: String
     ): User!
+
     updateUser(
       id: ID!
       name: String
@@ -43,6 +50,9 @@ export const typeDefs = gql`
       mainLocation: String
       hasVehicle: Boolean
       startDate: DateTime
+      gender: String
+      status: String
+      memo: String
     ): User!
     deleteUser(id: ID!): Boolean!
   }
@@ -79,6 +89,9 @@ export const resolvers = {
         role = 'PHOTOGRAPHER',
         hasVehicle = false,
         birthDate,
+        gender,
+        status,
+        memo,
       },
       context
     ) => {
@@ -95,6 +108,9 @@ export const resolvers = {
         role,
         hasVehicle,
         birthDate,
+        gender,
+        status,
+        memo,
       });
       return await user.save();
     },
@@ -110,6 +126,9 @@ export const resolvers = {
         hasVehicle,
         startDate,
         birthDate,
+        gender,
+        status,
+        memo,
       },
       context
     ) => {
@@ -132,6 +151,9 @@ export const resolvers = {
       if (hasVehicle !== undefined) user.hasVehicle = hasVehicle;
       if (startDate) user.startDate = startDate;
       if (birthDate) user.birthDate = birthDate;
+      if (gender) user.gender = gender;
+      if (status) user.status = status;
+      if (memo) user.memo = memo;
       return await user.save();
     },
 

@@ -9,6 +9,7 @@ const UserSchema = new mongoose.Schema(
     },
     name: { type: String, required: true },
     phone: { type: String, required: true },
+    gender: { type: String, enum: ['MALE', 'FEMALE'] },
     role: {
       type: String,
       enum: ['ADMIN', 'VIDEOGRAPHER', 'PHOTOGRAPHER', 'IPHONESNAPPER'], // 어드민, 영상, 사진, 아이폰스냅
@@ -19,6 +20,8 @@ const UserSchema = new mongoose.Schema(
     hasVehicle: { type: Boolean, default: false },
     startDate: { type: Date, required: true },
     birthDate: { type: Date },
+    status: { type: String, enum: ['ACTIVE', 'INACTIVE'] },
+    memo: { type: String },
   },
   { timestamps: true }
 );
