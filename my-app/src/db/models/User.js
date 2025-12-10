@@ -14,6 +14,12 @@ const UserSchema = new mongoose.Schema(
       enum: ['PHOTOGRAPHER', 'ADMIN'],
       default: 'PHOTOGRAPHER',
     },
+    address: { type: String, required: true },
+    // 주 촬영 지역
+    mainLocation: { type: String, required: true },
+    // 차량 유무
+    hasVehicle: { type: Boolean, default: false },
+    startDate: { type: Date, required: true },
   },
   { timestamps: true }
 );

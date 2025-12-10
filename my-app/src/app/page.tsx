@@ -53,6 +53,8 @@ export default function Home() {
               alt='camera icon'
               fill
               className='object-contain'
+              priority
+              unoptimized
             />
           </div>
           <h1 className='text-body2 text-normal font-bold'>Scheduler</h1>

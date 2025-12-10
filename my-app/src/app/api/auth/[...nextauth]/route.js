@@ -1,7 +1,6 @@
 import NextAuth from 'next-auth';
 import CredentialsProvider from 'next-auth/providers/credentials';
-import { User } from '../../../../models/User';
-import { connectToDatabase } from '../../../../db/mongodb';
+import { verifyUserCredentials } from '../../../../db/handlers/User';
 
 export const authOptions = {
   providers: [
@@ -13,26 +12,25 @@ export const authOptions = {
       },
       async authorize(credentials) {
         try {
-          await connectToDatabase();
-
-          const user = await User.findOne({
-            phone: credentials?.phone,
-          });
-
-          if (!user) {
-            throw new Error('사용자를 찾을 수 없습니다.');
+          if (!credentials?.phone || !credentials?.name) {
+            throw new Error('이름과 전화번호를 입력해주세요.');
           }
 
-          if (user.name !== credentials?.name) {
-            throw new Error('이름이 일치하지 않습니다.');
+          // User 존재 여부 및 인증 확인
+          const result = await verifyUserCredentials(
+            credentials.phone,
+            credentials.name
+          );
+
+          if (!result.success) {
+            throw new Error(result.error);
           }
 
           return {
-            id: user._id.toString(),
-            name: user.name,
-            phone: user.phone,
-            role: user.role,
-            tenantId: user.tenantId,
+            id: result.user.id,
+            name: result.user.name,
+            phone: result.user.phone,
+            role: result.user.role,
           };
         } catch (error) {
           console.error('인증 오류:', error);
@@ -46,7 +44,6 @@ export const authOptions = {
       if (user) {
         token.id = user.id;
         token.role = user.role;
-        token.tenantId = user.tenantId;
         token.phone = user.phone;
       }
       return token;
@@ -55,7 +52,6 @@ export const authOptions = {
       if (session.user) {
         session.user.id = token.id;
         session.user.role = token.role;
-        session.user.tenantId = token.tenantId;
         session.user.phone = token.phone;
       }
       return session;

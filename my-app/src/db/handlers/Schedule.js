@@ -1,5 +1,5 @@
-import { Schedule } from '../models/Schedule';
-import { connectToDatabase } from '../db/mongodb';
+import { Schedule } from '../../db/models/Schedule';
+import { connectToDatabase } from '../../db/mongodb';
 import { gql } from '@apollo/client';
 
 export const typeDefs = gql`
