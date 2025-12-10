@@ -4,9 +4,10 @@ import ContentLayout from '@/src/components/ContentLayout';
 import PageHeader from '@/src/components/PageHeader';
 import ScheduleInfo, { ScheduleInfoData } from '@/src/components/ScheduleInfo';
 import MobileLayout from '@/src/layout/MobileLayout';
-import { formatScheduleDate, formatDateForGroup, getDateColor } from '@/src/lib/utiles';
-import { useState, useEffect, useMemo } from 'react';
-import { useRouter } from 'next/navigation';
+import { formatScheduleDate, formatDateForGroup } from '@/src/lib/utiles';
+import { useState, useMemo } from 'react';
+import { useQuery } from '@apollo/client/react';
+import { GET_SCHEDULES } from '@/src/graphql/Schedule';
 import type { Schedule } from '@/src/types/schedule';
 
 interface ScheduleGroup {
@@ -17,32 +18,19 @@ interface ScheduleGroup {
   assignedScheduleIds: string[];
 }
 
+interface GetSchedulesData {
+  schedules: Schedule[];
+}
+
 const ScheduleManagementPage = () => {
-  const router = useRouter();
-  const [schedules, setSchedules] = useState<Schedule[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
   const [isConfirming, setIsConfirming] = useState(false);
 
-  // 스케줄 데이터 가져오기
-  useEffect(() => {
-    const fetchSchedules = async () => {
-      try {
-        const response = await fetch('/api/schedules/all');
-        if (!response.ok) {
-          throw new Error('스케줄을 가져오는데 실패했습니다.');
-        }
-        const data = await response.json();
-        setSchedules(data.schedules || []);
-      } catch (error) {
-        console.error('스케줄 가져오기 오류:', error);
-        alert('스케줄을 가져오는 중 오류가 발생했습니다.');
-      } finally {
-        setIsLoading(false);
-      }
-    };
+  // useQuery로 스케줄 데이터 가져오기 (assigned 또는 completed)
+  const { data, loading, refetch } = useQuery<GetSchedulesData>(GET_SCHEDULES, {
+    fetchPolicy: 'cache-and-network',
+  });
 
-    fetchSchedules();
-  }, []);
+  const schedules = useMemo(() => data?.schedules || [], [data?.schedules]);
 
   // 날짜별로 그룹화
   const scheduleGroups = useMemo(() => {
@@ -86,9 +74,7 @@ const ScheduleManagementPage = () => {
 
   // assigned인 스케줄이 있는지 확인
   const hasAssignedSchedules = useMemo(() => {
-    return scheduleGroups.some(
-      (group) => group.assignedScheduleIds.length > 0
-    );
+    return scheduleGroups.some((group) => group.assignedScheduleIds.length > 0);
   }, [scheduleGroups]);
 
   const handleConfirm = async () => {
@@ -118,14 +104,8 @@ const ScheduleManagementPage = () => {
       }
 
       alert('스케줄이 확정되었습니다.');
-      // 페이지 새로고침
-      router.refresh();
-      // 스케줄 다시 가져오기
-      const refreshResponse = await fetch('/api/schedules/all');
-      if (refreshResponse.ok) {
-        const data = await refreshResponse.json();
-        setSchedules(data.schedules || []);
-      }
+      // GraphQL 쿼리 다시 가져오기
+      await refetch();
     } catch (error) {
       console.error('스케줄 확정 오류:', error);
       const errorMessage =
@@ -138,7 +118,7 @@ const ScheduleManagementPage = () => {
     }
   };
 
-  if (isLoading) {
+  if (loading) {
     return (
       <MobileLayout>
         <PageHeader title='내 스케줄 확정/확인' />

@@ -7,16 +7,22 @@ import type { NextAuthOptions } from 'next-auth';
 
 export async function POST(request: NextRequest) {
   try {
-    // @ts-ignore - NextAuth v4 타입 호환성
     const session = await getServerSession(authOptions as NextAuthOptions);
 
     if (!session?.user?.id) {
-      return NextResponse.json({ error: '인증이 필요합니다.' }, { status: 401 });
+      return NextResponse.json(
+        { error: '인증이 필요합니다.' },
+        { status: 401 }
+      );
     }
 
     const { scheduleIds } = await request.json();
 
-    if (!scheduleIds || !Array.isArray(scheduleIds) || scheduleIds.length === 0) {
+    if (
+      !scheduleIds ||
+      !Array.isArray(scheduleIds) ||
+      scheduleIds.length === 0
+    ) {
       return NextResponse.json(
         { error: '스케줄 ID 배열이 필요합니다.' },
         { status: 400 }
@@ -66,4 +72,3 @@ export async function POST(request: NextRequest) {
     );
   }
 }
-

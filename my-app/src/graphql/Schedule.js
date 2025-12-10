@@ -5,12 +5,19 @@ export const GET_SCHEDULES = gql`
   query GetSchedules($date: String, $subStatus: String) {
     schedules(date: $date, subStatus: $subStatus) {
       id
+      mainUser
+      subUser
+      groom
+      bride
       time
       location
       venue
       date
+      memo
       status
       subStatus
+      createdAt
+      updatedAt
     }
   }
 `;

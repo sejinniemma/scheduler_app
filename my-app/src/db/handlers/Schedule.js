@@ -80,6 +80,9 @@ export const resolvers = {
       }
       if (subStatus) {
         query.subStatus = subStatus;
+      } else {
+        // subStatus가 없으면 assigned와 completed만 가져오기
+        query.subStatus = { $in: ['assigned', 'completed'] };
       }
 
       const schedules = await Schedule.find(query);

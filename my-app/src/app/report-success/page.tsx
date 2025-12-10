@@ -6,10 +6,10 @@ import MobileLayout from '@/src/layout/MobileLayout';
 import Image from 'next/image';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useSession } from 'next-auth/react';
-import { useMemo } from 'react';
+import { useMemo, Suspense } from 'react';
 import { useSchedule } from '@/src/contexts/ScheduleContext';
 
-const ReportSuccessPage = () => {
+const ReportSuccessContent = () => {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { data: session } = useSession();
@@ -82,6 +82,23 @@ const ReportSuccessPage = () => {
         </div>
       </div>
     </MobileLayout>
+  );
+};
+
+const ReportSuccessPage = () => {
+  return (
+    <Suspense
+      fallback={
+        <MobileLayout>
+          <PageHeader title='보고 완료' showBackButton={false} />
+          <div className='h-[calc(100%-100px)] flex items-center justify-center'>
+            <p className='text-caption1 text-default'>로딩 중...</p>
+          </div>
+        </MobileLayout>
+      }
+    >
+      <ReportSuccessContent />
+    </Suspense>
   );
 };
 

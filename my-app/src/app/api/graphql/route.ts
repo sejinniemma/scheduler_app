@@ -2,6 +2,9 @@ import { connectToDatabase } from '../../../db/mongodb';
 import { ApolloServer } from '@apollo/server';
 import { startServerAndCreateNextHandler } from '@as-integrations/next';
 import type { NextRequest } from 'next/server';
+import { getServerSession } from 'next-auth';
+import { authOptions } from '../../../lib/auth';
+import type { NextAuthOptions } from 'next-auth';
 
 import { typeDefs as UserTypeDefs } from '../../../db/handlers/User';
 import { typeDefs as ScheduleTypeDefs } from '../../../db/handlers/Schedule';
@@ -24,7 +27,12 @@ const server = new ApolloServer({
 const handler = startServerAndCreateNextHandler(server, {
   context: async () => {
     const db = await connectToDatabase();
-    return { db };
+    // NextAuth 세션 가져오기
+    const session = await getServerSession(authOptions as NextAuthOptions);
+    return {
+      db,
+      user: session?.user ? { id: session.user.id } : null,
+    };
   },
 });
 
