@@ -3,6 +3,8 @@ import localFont from 'next/font/local';
 import './globals.css';
 import { ApolloClientProvider, client } from '../client/ApolloClientProvider';
 import SessionProviderWrapper from '../components/SessionProviderWrapper';
+import ScheduleProviderWrapper from '../components/ScheduleProviderWrapper';
+import { getTodaySchedules } from '../lib/schedules';
 
 const pretendard = localFont({
   src: '../../public/fonts/PretendardVariable.woff2',
@@ -23,11 +25,14 @@ export const metadata: Metadata = {
 // 모든 언어에 Pretendard를 기본 폰트로 사용
 const fontFamily = 'var(--font-pretendard), sans-serif';
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  // 서버에서 오늘의 스케줄 데이터 가져오기
+  const schedules = await getTodaySchedules();
+
   return (
     <html lang='en'>
       <body
@@ -36,7 +41,9 @@ export default function RootLayout({
       >
         <SessionProviderWrapper>
           <ApolloClientProvider client={client}>
-            {children}
+            <ScheduleProviderWrapper initialSchedules={schedules}>
+              {children}
+            </ScheduleProviderWrapper>
           </ApolloClientProvider>
         </SessionProviderWrapper>
       </body>

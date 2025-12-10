@@ -1,20 +1,30 @@
+'use client';
+
 import ReportCard, { Report } from '@/src/components/ReportCard';
 import MobileLayout from '@/src/layout/MobileLayout';
-import { getServerSession } from 'next-auth';
-import { getTodaySchedules } from '@/src/lib/schedules';
+import { useSchedule } from '@/src/contexts/ScheduleContext';
+import { useSession } from 'next-auth/react';
 import { ScheduleListLoading } from '@/src/components/ScheduleList';
-import ScheduleListWrapper from '@/src/components/ScheduleListWrapper';
-import ScheduleCount from '@/src/components/ScheduleCount';
-import { Suspense } from 'react';
-import { authOptions } from '@/src/lib/auth';
-import { NextAuthOptions } from 'next-auth';
+import ScheduleListContent from '@/src/components/ScheduleList';
 
-const MainPage = async () => {
-  const session = await getServerSession(authOptions as NextAuthOptions);
+const MainPage = () => {
+  const { data: session } = useSession();
   const userName = session?.user?.name || '';
+  const { schedules } = useSchedule();
 
-  // 서버에서 스케줄 데이터 가져오기 (Promise로 전달하여 스트리밍 가능)
-  const schedulesPromise = getTodaySchedules();
+  // Context에서 가져온 스케줄 데이터 변환
+  const transformedSchedules = schedules.map((schedule) => ({
+    id: schedule.id,
+    time: schedule.time,
+    location: schedule.venue || schedule.location || '',
+    status: schedule.status as
+      | 'pending'
+      | 'ongoing'
+      | 'upcoming'
+      | 'completed'
+      | 'canceled',
+    currentStep: 0 as 0 | 1 | 2 | 3,
+  }));
 
   const reports: Report[] = [
     {
@@ -59,20 +69,18 @@ const MainPage = async () => {
             <h1 className='text-body4 text-normal font-semibold'>
               {userName ? `${userName}님, ` : ''}금일 스케쥴 진행상황
             </h1>
-            <Suspense
-              fallback={
-                <span className='text-caption2 text-default'>총 ...건</span>
-              }
-            >
-              <ScheduleCount schedulesPromise={schedulesPromise} />
-            </Suspense>
+            <span className='text-caption2 text-default'>
+              총 {transformedSchedules.length}건
+            </span>
           </div>
 
           {/* Schedule List */}
           <div className='flex flex-col gap-[20px]'>
-            <Suspense fallback={<ScheduleListLoading />}>
-              <ScheduleListWrapper schedulesPromise={schedulesPromise} />
-            </Suspense>
+            {transformedSchedules.length === 0 ? (
+              <ScheduleListLoading />
+            ) : (
+              <ScheduleListContent schedules={transformedSchedules} />
+            )}
           </div>
         </div>
 

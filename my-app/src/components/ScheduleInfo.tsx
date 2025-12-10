@@ -62,25 +62,15 @@ const ScheduleInfo = ({ schedule }: ScheduleInfoProps) => {
             width={16}
             height={16}
           />
-          <p className='text-caption1 text-normal font-medium'>
-            {schedule.venue}
-          </p>
+          <div className='flex flex-col'>
+            <p className='text-caption1 text-normal font-medium'>
+              {schedule.venue}
+            </p>
+            <p className='text-caption2 text-dark'>{`(${schedule.location})`}</p>
+          </div>
         </div>
       )}
-      {/* location (실 주소) */}
-      {schedule.location && (
-        <div className='flex items-center gap-[6px] pt-[10px] w-full'>
-          <Image
-            src='/images/icons/arrival.png'
-            alt='location'
-            width={16}
-            height={16}
-          />
-          <p className='text-caption1 text-normal font-medium'>
-            {schedule.location}
-          </p>
-        </div>
-      )}
+
       {/* memo */}
       <div className='flex items-center gap-[6px] pt-[10px] w-full'>
         <Image src='/images/icons/memo.png' alt='memo' width={16} height={16} />
