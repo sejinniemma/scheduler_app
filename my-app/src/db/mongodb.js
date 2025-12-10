@@ -21,9 +21,3 @@ export async function connectToDatabase() {
   cached.conn = await cached.promise;
   return cached.conn;
 }
-
-// GraphQL 서버에서 context에 추가하기 위한 함수 : resolver에서 실행, mongodb와의 연결
-// export async function createContext() {
-//   const db = await connectToDatabase();
-//   return { db };
-// }
