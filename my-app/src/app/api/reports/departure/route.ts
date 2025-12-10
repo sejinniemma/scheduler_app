@@ -16,7 +16,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: '인증이 필요합니다.' }, { status: 401 });
     }
 
-    const { scheduleId } = await request.json();
+    const { scheduleId, estimatedTime } = await request.json();
 
     if (!scheduleId) {
       return NextResponse.json({ error: '스케줄 ID가 필요합니다.' }, { status: 400 });
@@ -58,6 +58,7 @@ export async function POST(request: NextRequest) {
       // 기존 Report 업데이트
       report.status = 'departure';
       report.currentStep = 2; // 출발 보고는 step 2
+      if (estimatedTime !== undefined) report.estimatedTime = estimatedTime;
       await report.save();
     } else {
       // 새 Report 생성
@@ -65,6 +66,7 @@ export async function POST(request: NextRequest) {
         schedule: schedule._id,
         user: user._id,
         status: 'departure',
+        estimatedTime,
         currentStep: 2,
       });
       await report.save();

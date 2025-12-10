@@ -12,6 +12,7 @@ export const typeDefs = gql`
     schedule: ID!
     user: ID!
     status: String!
+    estimatedTime: String
     currentStep: Int!
     memo: String
     reportedAt: DateTime!
@@ -30,11 +31,18 @@ export const typeDefs = gql`
     createReport(
       scheduleId: ID!
       status: String!
+      estimatedTime: String
       currentStep: Int
       memo: String
     ): Report!
 
-    updateReport(id: ID!, status: String, currentStep: Int, memo: String): Report!
+    updateReport(
+      id: ID!
+      status: String
+      estimatedTime: String
+      currentStep: Int
+      memo: String
+    ): Report!
 
     deleteReport(id: ID!): Boolean!
   }
@@ -102,7 +110,7 @@ export const resolvers = {
   Mutation: {
     createReport: async (
       parent,
-      { scheduleId, status, currentStep = 0, memo },
+      { scheduleId, status, estimatedTime, currentStep = 0, memo },
       context
     ) => {
       if (!context.user) {
@@ -129,6 +137,7 @@ export const resolvers = {
         schedule: schedule._id,
         user: context.user.id,
         status,
+        estimatedTime,
         currentStep,
         memo,
       });
@@ -140,7 +149,11 @@ export const resolvers = {
       return await report.save();
     },
 
-    updateReport: async (parent, { id, status, currentStep, memo }, context) => {
+    updateReport: async (
+      parent,
+      { id, status, estimatedTime, currentStep, memo },
+      context
+    ) => {
       if (!context.user) {
         throw new Error('인증이 필요합니다.');
       }
@@ -154,6 +167,7 @@ export const resolvers = {
         throw new Error('권한이 없습니다.');
       }
       if (status) report.status = status;
+      if (estimatedTime !== undefined) report.estimatedTime = estimatedTime;
       if (currentStep !== undefined) report.currentStep = currentStep;
       if (memo !== undefined) report.memo = memo;
       return await report.save();

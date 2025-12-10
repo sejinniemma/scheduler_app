@@ -27,23 +27,41 @@ const MainPage = () => {
   }));
 
   // 스케줄의 status를 확인하여 보고 완료 여부 판단
+  // 순서: 기상(wakeup) -> 출발(departure) -> 도착(arrival) -> 종료(completed)
   const getReportStatus = (reportType: string) => {
     if (schedules.length === 0) return false;
 
-    const scheduleStatus = schedules[0].status;
+    // 모든 스케줄 중 하나라도 해당 단계 이상이면 disabled
+    return schedules.some((schedule) => {
+      const scheduleStatus = schedule.status;
 
-    switch (reportType) {
-      case 'wakeup':
-        return scheduleStatus === 'wakeup';
-      case 'departure':
-        return scheduleStatus === 'departure';
-      case 'arrival':
-        return scheduleStatus === 'arrival';
-      case 'completed':
-        return scheduleStatus === 'completed';
-      default:
-        return false;
-    }
+      // 보고 순서에 따라 해당 단계 이상이면 disabled
+      switch (reportType) {
+        case 'wakeup':
+          // 기상 보고: wakeup 이상이면 disabled
+          return (
+            scheduleStatus === 'wakeup' ||
+            scheduleStatus === 'departure' ||
+            scheduleStatus === 'arrival' ||
+            scheduleStatus === 'completed'
+          );
+        case 'departure':
+          // 출발 보고: departure 이상이면 disabled (기상 보고도 함께 disabled)
+          return (
+            scheduleStatus === 'departure' ||
+            scheduleStatus === 'arrival' ||
+            scheduleStatus === 'completed'
+          );
+        case 'arrival':
+          // 도착 보고: arrival 이상이면 disabled (기상, 출발 보고도 함께 disabled)
+          return scheduleStatus === 'arrival' || scheduleStatus === 'completed';
+        case 'completed':
+          // 종료 보고: completed이면 disabled
+          return scheduleStatus === 'completed';
+        default:
+          return false;
+      }
+    });
   };
 
   const reports: Report[] = [

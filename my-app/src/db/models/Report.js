@@ -30,6 +30,10 @@ const ReportSchema = new mongoose.Schema(
       ],
       required: true,
     },
+    estimatedTime: {
+      type: String,
+      default: 0,
+    },
     currentStep: {
       type: Number,
       enum: [0, 1, 2, 3],
