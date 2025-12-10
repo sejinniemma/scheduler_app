@@ -1,74 +1,191 @@
+'use client';
 import Button from '@/src/components/Button';
 import ContentLayout from '@/src/components/ContentLayout';
 import PageHeader from '@/src/components/PageHeader';
 import ScheduleInfo, { ScheduleInfoData } from '@/src/components/ScheduleInfo';
 import MobileLayout from '@/src/layout/MobileLayout';
-import React from 'react';
+import { formatScheduleDate, formatDateForGroup, getDateColor } from '@/src/lib/utiles';
+import { useState, useEffect, useMemo } from 'react';
+import { useRouter } from 'next/navigation';
+import type { Schedule } from '@/src/types/schedule';
 
 interface ScheduleGroup {
   date: string;
   dateColor: 'blue' | 'red';
   schedules: ScheduleInfoData[];
+  scheduleIds: string[];
+  assignedScheduleIds: string[];
 }
 
 const ScheduleManagementPage = () => {
-  const scheduleGroups: ScheduleGroup[] = [
-    {
-      date: '2025년 11월 29일 토요일',
-      dateColor: 'blue',
-      schedules: [
-        {
-          groom: '송명철',
-          bride: '이수연',
-          date: '2025-11-29',
-          location: '강동 kdw 웨딩 3층 블랙스톤홀 (바모)',
-          memo: 'DVD 진행',
+  const router = useRouter();
+  const [schedules, setSchedules] = useState<Schedule[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isConfirming, setIsConfirming] = useState(false);
+
+  // 스케줄 데이터 가져오기
+  useEffect(() => {
+    const fetchSchedules = async () => {
+      try {
+        const response = await fetch('/api/schedules/all');
+        if (!response.ok) {
+          throw new Error('스케줄을 가져오는데 실패했습니다.');
+        }
+        const data = await response.json();
+        setSchedules(data.schedules || []);
+      } catch (error) {
+        console.error('스케줄 가져오기 오류:', error);
+        alert('스케줄을 가져오는 중 오류가 발생했습니다.');
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchSchedules();
+  }, []);
+
+  // 날짜별로 그룹화
+  const scheduleGroups = useMemo(() => {
+    const groups: { [key: string]: Schedule[] } = {};
+
+    schedules.forEach((schedule) => {
+      if (!groups[schedule.date]) {
+        groups[schedule.date] = [];
+      }
+      groups[schedule.date].push(schedule);
+    });
+
+    return Object.keys(groups)
+      .sort()
+      .map((date) => {
+        const dateSchedules = groups[date];
+        // 해당 날짜의 스케줄들 중 하나라도 completed가 있으면 파란색, 모두 assigned면 빨간색
+        const hasCompleted = dateSchedules.some(
+          (schedule) => schedule.subStatus === 'completed'
+        );
+        const assignedIds = dateSchedules
+          .filter((schedule) => schedule.subStatus === 'assigned')
+          .map((schedule) => schedule.id);
+
+        return {
+          date: formatDateForGroup(date),
+          dateColor: hasCompleted ? 'blue' : 'red',
+          schedules: dateSchedules.map((schedule) => ({
+            groom: schedule.groom || '',
+            bride: schedule.bride || '',
+            date: formatScheduleDate(schedule.date, schedule.time),
+            location: schedule.location || '',
+            venue: schedule.venue || '',
+            memo: schedule.memo || '',
+          })),
+          scheduleIds: dateSchedules.map((schedule) => schedule.id),
+          assignedScheduleIds: assignedIds,
+        };
+      });
+  }, [schedules]);
+
+  // assigned인 스케줄이 있는지 확인
+  const hasAssignedSchedules = useMemo(() => {
+    return scheduleGroups.some(
+      (group) => group.assignedScheduleIds.length > 0
+    );
+  }, [scheduleGroups]);
+
+  const handleConfirm = async () => {
+    // assigned인 스케줄 ID만 수집
+    const assignedScheduleIds = scheduleGroups.flatMap(
+      (group) => group.assignedScheduleIds
+    );
+
+    if (assignedScheduleIds.length === 0) {
+      alert('확정할 스케줄이 없습니다.');
+      return;
+    }
+
+    setIsConfirming(true);
+    try {
+      const response = await fetch('/api/schedules/confirm', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
         },
-        {
-          groom: '김민수',
-          bride: '박지영',
-          date: '2025-11-29',
-          location: '영등포 해군호텔 2층 노블레스 홀',
-          memo: '웨딩 촬영',
-        },
-      ],
-    },
-    {
-      date: '2025년 11월 30일 일요일',
-      dateColor: 'red',
-      schedules: [
-        {
-          groom: '이동욱',
-          bride: '최수진',
-          date: '2025-11-30',
-          location: '강남 컨벤션센터 그랜드홀',
-          memo: '스튜디오 촬영',
-        },
-      ],
-    },
-  ];
+        body: JSON.stringify({ scheduleIds: assignedScheduleIds }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || '스케줄 확정에 실패했습니다.');
+      }
+
+      alert('스케줄이 확정되었습니다.');
+      // 페이지 새로고침
+      router.refresh();
+      // 스케줄 다시 가져오기
+      const refreshResponse = await fetch('/api/schedules/all');
+      if (refreshResponse.ok) {
+        const data = await refreshResponse.json();
+        setSchedules(data.schedules || []);
+      }
+    } catch (error) {
+      console.error('스케줄 확정 오류:', error);
+      const errorMessage =
+        error instanceof Error
+          ? error.message
+          : '스케줄 확정 중 오류가 발생했습니다.';
+      alert(errorMessage);
+    } finally {
+      setIsConfirming(false);
+    }
+  };
+
+  if (isLoading) {
+    return (
+      <MobileLayout>
+        <PageHeader title='내 스케줄 확정/확인' />
+        <ContentLayout>
+          <p className='text-caption1 text-default text-center py-[20px]'>
+            로딩 중...
+          </p>
+        </ContentLayout>
+      </MobileLayout>
+    );
+  }
 
   return (
     <MobileLayout>
       <PageHeader title='내 스케줄 확정/확인' />
       <ContentLayout>
-        {scheduleGroups.map((group, groupIndex) => (
-          <div key={groupIndex} className='mb-[24px]'>
-            <p
-              className={`text-body4 font-semibold text-center mb-[10px] ${
-                group.dateColor === 'blue' ? 'text-blue' : 'text-red'
-              }`}
-            >
-              {group.date}
-            </p>
-            <div className='flex flex-col gap-[10px]'>
-              {group.schedules.map((schedule, scheduleIndex) => (
-                <ScheduleInfo key={scheduleIndex} schedule={schedule} />
-              ))}
-            </div>
-          </div>
-        ))}
-        <Button text='스케줄 확정' />
+        {scheduleGroups.length === 0 ? (
+          <p className='text-caption1 text-default text-center py-[20px]'>
+            확정할 스케줄이 없습니다.
+          </p>
+        ) : (
+          <>
+            {scheduleGroups.map((group, groupIndex) => (
+              <div key={groupIndex} className='mb-[24px]'>
+                <p
+                  className={`text-body4 font-semibold text-center mb-[10px] ${
+                    group.dateColor === 'blue' ? 'text-blue' : 'text-red'
+                  }`}
+                >
+                  {group.date}
+                </p>
+                <div className='flex flex-col gap-[10px]'>
+                  {group.schedules.map((schedule, scheduleIndex) => (
+                    <ScheduleInfo key={scheduleIndex} schedule={schedule} />
+                  ))}
+                </div>
+              </div>
+            ))}
+            {hasAssignedSchedules && (
+              <Button
+                text={isConfirming ? '확정 중...' : '스케줄 확정'}
+                onClick={handleConfirm}
+                disabled={isConfirming}
+              />
+            )}
+          </>
+        )}
       </ContentLayout>
     </MobileLayout>
   );
