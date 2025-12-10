@@ -7,6 +7,7 @@ import Image from 'next/image';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useSession } from 'next-auth/react';
 import { useMemo } from 'react';
+import { useSchedule } from '@/src/contexts/ScheduleContext';
 
 const ReportSuccessPage = () => {
   const router = useRouter();
@@ -14,6 +15,14 @@ const ReportSuccessPage = () => {
   const { data: session } = useSession();
   const userName = session?.user?.name || '';
   const status = searchParams.get('status') || 'wakeup';
+  const { refreshSchedules } = useSchedule();
+
+  const handleConfirm = () => {
+    // 스케줄 새로고침 후 메인으로 이동
+    refreshSchedules().then(() => {
+      router.push('/main');
+    });
+  };
 
   // status에 따른 텍스트 설정
   const statusConfig = useMemo(() => {
@@ -74,7 +83,7 @@ const ReportSuccessPage = () => {
           <p className='text-caption1 text-dark font-medium'>
             {statusConfig.description}
           </p>
-          <Button text='확인' onClick={() => router.push('/main')} />
+          <Button text='확인' onClick={handleConfirm} />
         </div>
       </div>
     </MobileLayout>

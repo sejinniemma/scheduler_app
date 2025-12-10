@@ -1,6 +1,8 @@
 import { getServerSession } from 'next-auth';
 import { authOptions } from './auth';
 import ScheduleModel from '../db/models/Schedule';
+import ReportModel from '../db/models/Report';
+import UserModel from '../db/models/User';
 import { connectToDatabase } from '../db/mongodb';
 import { getToday } from './utiles';
 import type { NextAuthOptions } from 'next-auth';
@@ -29,23 +31,42 @@ export async function getTodaySchedules(): Promise<Schedule[]> {
       a.time.localeCompare(b.time)
     );
 
-    // Mongoose 문서를 일반 객체로 변환 (toJSON 메서드 제거)
-    return sortedSchedules.map((schedule) => ({
-      id: schedule.id,
-      mainUser: schedule.mainUser,
-      subUser: schedule.subUser,
-      groom: schedule.groom,
-      bride: schedule.bride,
-      date: schedule.date,
-      time: schedule.time,
-      location: schedule.location,
-      venue: schedule.venue,
-      memo: schedule.memo,
-      status: schedule.status,
-      subStatus: schedule.subStatus,
-      createdAt: schedule.createdAt?.toISOString(),
-      updatedAt: schedule.updatedAt?.toISOString(),
-    }));
+    // User 찾기 (Report 조회를 위해)
+    const user = await UserModel.findOne({ id: session.user.id });
+    if (!user) {
+      return [];
+    }
+
+    // 각 스케줄에 대한 Report의 currentStep 가져오기
+    const schedulesWithCurrentStep = await Promise.all(
+      sortedSchedules.map(async (schedule) => {
+        // 해당 스케줄에 대한 Report 찾기
+        const report = await ReportModel.findOne({
+          schedule: schedule._id,
+          user: user._id,
+        });
+
+        return {
+          id: schedule.id,
+          mainUser: schedule.mainUser,
+          subUser: schedule.subUser,
+          groom: schedule.groom,
+          bride: schedule.bride,
+          date: schedule.date,
+          time: schedule.time,
+          location: schedule.location,
+          venue: schedule.venue,
+          memo: schedule.memo,
+          status: schedule.status,
+          subStatus: schedule.subStatus,
+          currentStep: report?.currentStep ?? 0,
+          createdAt: schedule.createdAt?.toISOString(),
+          updatedAt: schedule.updatedAt?.toISOString(),
+        };
+      })
+    );
+
+    return schedulesWithCurrentStep;
   } catch (error) {
     console.error('스케줄 가져오기 오류:', error);
     return [];

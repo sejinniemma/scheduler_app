@@ -40,7 +40,7 @@ const ProgressBar = ({ currentStep, disabled = false }: ProgressBarProps) => {
       checkCondition: (step: number) => step === 3,
     },
   ];
-
+  console.log(currentStep);
   const getProgressWidth = () => {
     if (currentStep === 0) return '0%';
     if (currentStep === 1) return '30%';

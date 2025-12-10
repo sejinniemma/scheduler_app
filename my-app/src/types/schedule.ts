@@ -11,6 +11,7 @@ export interface Schedule {
   memo?: string;
   status: string;
   subStatus: string;
+  currentStep?: number;
   createdAt?: string;
   updatedAt?: string;
 }

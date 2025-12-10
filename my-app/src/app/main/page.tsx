@@ -6,11 +6,24 @@ import { useSchedule } from '@/src/contexts/ScheduleContext';
 import { useSession } from 'next-auth/react';
 import { ScheduleListLoading } from '@/src/components/ScheduleList';
 import ScheduleListContent from '@/src/components/ScheduleList';
+import { useEffect } from 'react';
 
 const MainPage = () => {
   const { data: session } = useSession();
   const userName = session?.user?.name || '';
-  const { schedules } = useSchedule();
+  const { schedules, refreshSchedules } = useSchedule();
+
+  // 페이지 포커스 시 스케줄 새로고침
+  useEffect(() => {
+    const handleFocus = () => {
+      refreshSchedules();
+    };
+
+    window.addEventListener('focus', handleFocus);
+    return () => {
+      window.removeEventListener('focus', handleFocus);
+    };
+  }, [refreshSchedules]);
 
   // Context에서 가져온 스케줄 데이터 변환
   const transformedSchedules = schedules.map((schedule) => ({
@@ -22,8 +35,11 @@ const MainPage = () => {
       | 'ongoing'
       | 'upcoming'
       | 'completed'
-      | 'canceled',
-    currentStep: 0 as 0 | 1 | 2 | 3,
+      | 'canceled'
+      | 'wakeup'
+      | 'departure'
+      | 'arrival',
+    currentStep: (schedule.currentStep ?? 0) as 0 | 1 | 2 | 3,
   }));
 
   // 스케줄의 status를 확인하여 보고 완료 여부 판단

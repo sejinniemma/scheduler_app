@@ -1,15 +1,24 @@
 'use client';
 
-import { createContext, useContext, ReactNode } from 'react';
+import {
+  createContext,
+  useContext,
+  ReactNode,
+  useState,
+  useCallback,
+} from 'react';
 import type { Schedule } from '@/src/types/schedule';
 
 interface ScheduleContextType {
   schedules: Schedule[];
   isLoading: boolean;
   error: string | null;
+  refreshSchedules: () => Promise<void>;
 }
 
-const ScheduleContext = createContext<ScheduleContextType | undefined>(undefined);
+const ScheduleContext = createContext<ScheduleContextType | undefined>(
+  undefined
+);
 
 interface ScheduleProviderProps {
   children: ReactNode;
@@ -20,12 +29,37 @@ export function ScheduleProvider({
   children,
   initialSchedules,
 }: ScheduleProviderProps) {
+  const [schedules, setSchedules] = useState<Schedule[]>(initialSchedules);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const refreshSchedules = useCallback(async () => {
+    setIsLoading(true);
+    setError(null);
+    try {
+      const response = await fetch('/api/schedules/today');
+      if (!response.ok) {
+        throw new Error('스케줄을 가져오는데 실패했습니다.');
+      }
+      const data = await response.json();
+      setSchedules(data.schedules || []);
+    } catch (err) {
+      console.error('스케줄 새로고침 오류:', err);
+      setError(
+        err instanceof Error ? err.message : '알 수 없는 오류가 발생했습니다.'
+      );
+    } finally {
+      setIsLoading(false);
+    }
+  }, []);
+
   return (
     <ScheduleContext.Provider
       value={{
-        schedules: initialSchedules,
-        isLoading: false,
-        error: null,
+        schedules,
+        isLoading,
+        error,
+        refreshSchedules,
       }}
     >
       {children}
@@ -40,4 +74,3 @@ export function useSchedule() {
   }
   return context;
 }
-
