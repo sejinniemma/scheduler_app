@@ -1,0 +1,29 @@
+import mongoose from 'mongoose';
+
+const MONGODB_URI = process.env.MONGODB_URI;
+
+if (!MONGODB_URI) {
+  throw new Error(
+    'Please define the MONGODB_URI environment variable inside .env.local'
+  );
+}
+
+// 글로벌 캐싱 (중복 연결 방지)
+let cached = global.mongoose || { conn: null, promise: null };
+
+export async function connectToDatabase() {
+  if (cached.conn) return cached.conn;
+
+  if (!cached.promise) {
+    cached.promise = mongoose.connect(MONGODB_URI);
+  }
+
+  cached.conn = await cached.promise;
+  return cached.conn;
+}
+
+// GraphQL 서버에서 context에 추가하기 위한 함수 : resolver에서 실행, mongodb와의 연결
+// export async function createContext() {
+//   const db = await connectToDatabase();
+//   return { db };
+// }
