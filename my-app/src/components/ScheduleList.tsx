@@ -68,10 +68,7 @@ export default function ScheduleListContent({ schedules }: ScheduleListProps) {
             {/* Progress Bar */}
             <ProgressBar
               currentStep={progressStep}
-              disabled={
-                schedule.status === 'completed' ||
-                schedule.status === 'canceled'
-              }
+              disabled={schedule.status === 'canceled'}
             />
           </div>
         );

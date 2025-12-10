@@ -37,22 +37,22 @@ const ReportSuccessPage = () => {
       case 'departure':
         return {
           pageTitle: '출발 보고 완료',
-          title: `${userName}님의 출발을 보고했어요 !`,
-          description: '안전하게 도착하시길 바랍니다',
+          title: `${userName}님의 출발을 보고했어요!`,
+          description: '오늘도 최고의 순간을 담아주세요',
           icon: '/images/icons/success.png',
         };
       case 'arrival':
         return {
           pageTitle: '도착 보고 완료',
-          title: `${userName}님의 도착을 보고했어요 !`,
-          description: '좋은 촬영 되시길 바랍니다',
+          title: `${userName}님의 도착을 보고했어요!`,
+          description: '오늘도 최고의 순간을 담아주세요',
           icon: '/images/icons/success.png',
         };
       case 'completed':
         return {
           pageTitle: '종료 보고 완료',
-          title: `${userName}님의 촬영 종료를 보고했어요 !`,
-          description: '수고하셨습니다',
+          title: `${userName}님의 촬영 종료를 보고했어요!`,
+          description: '촬영하느라 고생하셨어요',
           icon: '/images/icons/success.png',
         };
       default:
@@ -71,13 +71,8 @@ const ReportSuccessPage = () => {
 
       <div className='h-[calc(100%-100px)] flex items-center justify-center'>
         <div className='w-[270px] mx-auto flex flex-col items-center justify-center'>
-          <Image
-            src={statusConfig.icon}
-            alt='success'
-            width={60}
-            height={60}
-          />
-          <h1 className='text-body2 text-normal font-bold mt-[20px] mb-[12px]'>
+          <Image src={statusConfig.icon} alt='success' width={60} height={60} />
+          <h1 className='text-body2 text-normal font-bold mt-[20px] mb-[12px] whitespace-nowrap'>
             {statusConfig.title}
           </h1>
           <p className='text-caption1 text-dark font-medium'>
