@@ -11,15 +11,14 @@ const UserSchema = new mongoose.Schema(
     phone: { type: String, required: true },
     role: {
       type: String,
-      enum: ['PHOTOGRAPHER', 'ADMIN'],
+      enum: ['ADMIN', 'VIDEOGRAPHER', 'PHOTOGRAPHER', 'IPHONESNAPPER'], // 어드민, 영상, 사진, 아이폰스냅
       default: 'PHOTOGRAPHER',
     },
-    address: { type: String, required: true },
-    // 주 촬영 지역
-    mainLocation: { type: String, required: true },
-    // 차량 유무
+    address: { type: String },
+    mainLocation: { type: String },
     hasVehicle: { type: Boolean, default: false },
     startDate: { type: Date, required: true },
+    birthDate: { type: Date },
   },
   { timestamps: true }
 );

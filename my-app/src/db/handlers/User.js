@@ -10,12 +10,13 @@ export const typeDefs = gql`
     name: String!
     phone: String!
     role: String!
-    address: String!
-    mainLocation: String!
-    hasVehicle: Boolean!
-    startDate: DateTime!
-    createdAt: DateTime!
-    updatedAt: DateTime!
+    address: String
+    mainLocation: String
+    hasVehicle: Boolean
+    startDate: DateTime
+    birthDate: DateTime
+    createdAt: DateTime
+    updatedAt: DateTime
   }
 
   type Query {
@@ -27,11 +28,12 @@ export const typeDefs = gql`
     createUser(
       name: String!
       phone: String!
-      address: String!
-      mainLocation: String!
+      address: String
+      mainLocation: String
       startDate: DateTime!
       role: String
       hasVehicle: Boolean
+      birthDate: DateTime
     ): User!
     updateUser(
       id: ID!
@@ -76,6 +78,7 @@ export const resolvers = {
         startDate,
         role = 'PHOTOGRAPHER',
         hasVehicle = false,
+        birthDate,
       },
       context
     ) => {
@@ -91,13 +94,23 @@ export const resolvers = {
         startDate,
         role,
         hasVehicle,
+        birthDate,
       });
       return await user.save();
     },
 
     updateUser: async (
       parent,
-      { id, name, phone, address, mainLocation, hasVehicle, startDate },
+      {
+        id,
+        name,
+        phone,
+        address,
+        mainLocation,
+        hasVehicle,
+        startDate,
+        birthDate,
+      },
       context
     ) => {
       if (!context.user) {
@@ -118,6 +131,7 @@ export const resolvers = {
       if (mainLocation) user.mainLocation = mainLocation;
       if (hasVehicle !== undefined) user.hasVehicle = hasVehicle;
       if (startDate) user.startDate = startDate;
+      if (birthDate) user.birthDate = birthDate;
       return await user.save();
     },
 

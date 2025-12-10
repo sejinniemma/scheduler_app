@@ -1,6 +1,9 @@
+'use client';
+
 import ProgressBar from '@/src/components/ProgressBar';
 import ReportCard, { Report } from '@/src/components/ReportCard';
 import MobileLayout from '@/src/layout/MobileLayout';
+import { useSession } from 'next-auth/react';
 
 interface Schedule {
   time: string;
@@ -10,6 +13,8 @@ interface Schedule {
 }
 
 const MainPage = () => {
+  const { data: session } = useSession();
+  const userName = session?.user?.name || '';
   const schedules: Schedule[] = [
     {
       time: '11:30',
@@ -66,7 +71,7 @@ const MainPage = () => {
           {/* Title */}
           <div className='flex items-center justify-between'>
             <h1 className='text-body4 text-normal font-semibold'>
-              금일 스케쥴 진행상황
+              {userName ? `${userName}님, ` : ''}금일 스케쥴 진행상황
             </h1>
             <span className='text-caption2 text-default'>
               총 {schedules.length}건

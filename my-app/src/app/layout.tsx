@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import localFont from 'next/font/local';
 import './globals.css';
 import { ApolloClientProvider, client } from '../client/ApolloClientProvider';
+import SessionProviderWrapper from '../components/SessionProviderWrapper';
 
 const pretendard = localFont({
   src: '../../public/fonts/PretendardVariable.woff2',
@@ -30,7 +31,11 @@ export default function RootLayout({
         className={`antialiased flex flex-col min-h-screen overflow-x-hidden ${pretendard.variable}`}
         style={{ fontFamily }}
       >
-        <ApolloClientProvider client={client}>{children}</ApolloClientProvider>
+        <SessionProviderWrapper>
+          <ApolloClientProvider client={client}>
+            {children}
+          </ApolloClientProvider>
+        </SessionProviderWrapper>
       </body>
     </html>
   );
