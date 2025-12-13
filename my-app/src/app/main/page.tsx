@@ -11,19 +11,19 @@ import { useEffect } from 'react';
 const MainPage = () => {
   const { data: session } = useSession();
   const userName = session?.user?.name || '';
-  const { schedules, refreshSchedules } = useSchedule();
+  const { schedules, refetch } = useSchedule();
 
   // 페이지 포커스 시 스케줄 새로고침
   useEffect(() => {
     const handleFocus = () => {
-      refreshSchedules();
+      refetch();
     };
 
     window.addEventListener('focus', handleFocus);
     return () => {
       window.removeEventListener('focus', handleFocus);
     };
-  }, [refreshSchedules]);
+  }, [refetch]);
 
   // Context에서 가져온 스케줄 데이터 변환
   const transformedSchedules = schedules.map((schedule) => ({
@@ -42,42 +42,41 @@ const MainPage = () => {
     currentStep: (schedule.currentStep ?? 0) as 0 | 1 | 2 | 3,
   }));
 
-  // 스케줄의 status를 확인하여 보고 완료 여부 판단
+  // 가장 가까운 시간의 스케줄 상태를 확인하여 보고 완료 여부 판단
   // 순서: 기상(wakeup) -> 출발(departure) -> 도착(arrival) -> 종료(completed)
   const getReportStatus = (reportType: string) => {
     if (schedules.length === 0) return false;
 
-    // 모든 스케줄 중 하나라도 해당 단계 이상이면 disabled
-    return schedules.some((schedule) => {
-      const scheduleStatus = schedule.status;
+    // 가장 가까운 시간의 스케줄 (첫 번째 스케줄, 이미 시간 순으로 정렬됨)
+    const nearestSchedule = schedules[0];
+    const scheduleStatus = nearestSchedule.status;
 
-      // 보고 순서에 따라 해당 단계 이상이면 disabled
-      switch (reportType) {
-        case 'wakeup':
-          // 기상 보고: wakeup 이상이면 disabled
-          return (
-            scheduleStatus === 'wakeup' ||
-            scheduleStatus === 'departure' ||
-            scheduleStatus === 'arrival' ||
-            scheduleStatus === 'completed'
-          );
-        case 'departure':
-          // 출발 보고: departure 이상이면 disabled (기상 보고도 함께 disabled)
-          return (
-            scheduleStatus === 'departure' ||
-            scheduleStatus === 'arrival' ||
-            scheduleStatus === 'completed'
-          );
-        case 'arrival':
-          // 도착 보고: arrival 이상이면 disabled (기상, 출발 보고도 함께 disabled)
-          return scheduleStatus === 'arrival' || scheduleStatus === 'completed';
-        case 'completed':
-          // 종료 보고: completed이면 disabled
-          return scheduleStatus === 'completed';
-        default:
-          return false;
-      }
-    });
+    // 보고 순서에 따라 해당 단계 이상이면 disabled
+    switch (reportType) {
+      case 'wakeup':
+        // 기상 보고: wakeup 이상이면 disabled
+        return (
+          scheduleStatus === 'wakeup' ||
+          scheduleStatus === 'departure' ||
+          scheduleStatus === 'arrival' ||
+          scheduleStatus === 'completed'
+        );
+      case 'departure':
+        // 출발 보고: departure 이상이면 disabled
+        return (
+          scheduleStatus === 'departure' ||
+          scheduleStatus === 'arrival' ||
+          scheduleStatus === 'completed'
+        );
+      case 'arrival':
+        // 도착 보고: arrival 이상이면 disabled
+        return scheduleStatus === 'arrival' || scheduleStatus === 'completed';
+      case 'completed':
+        // 종료 보고: completed이면 disabled
+        return scheduleStatus === 'completed';
+      default:
+        return false;
+    }
   };
 
   const reports: Report[] = [

@@ -14,6 +14,7 @@ interface ScheduleContextType {
   isLoading: boolean;
   error: string | null;
   refreshSchedules: () => Promise<void>;
+  refetch: () => Promise<void>;
 }
 
 const ScheduleContext = createContext<ScheduleContextType | undefined>(
@@ -53,6 +54,11 @@ export function ScheduleProvider({
     }
   }, []);
 
+  // refetch는 refreshSchedules의 별칭
+  const refetch = useCallback(async () => {
+    await refreshSchedules();
+  }, [refreshSchedules]);
+
   return (
     <ScheduleContext.Provider
       value={{
@@ -60,6 +66,7 @@ export function ScheduleProvider({
         isLoading,
         error,
         refreshSchedules,
+        refetch,
       }}
     >
       {children}

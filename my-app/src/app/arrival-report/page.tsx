@@ -9,15 +9,32 @@ import Image from 'next/image';
 import { useSchedule } from '@/src/contexts/ScheduleContext';
 import { useSession } from 'next-auth/react';
 import { formatScheduleDate } from '@/src/lib/utiles';
-import { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { useMutation } from '@apollo/client/react';
+import { CREATE_ARRIVAL_REPORT } from '@/src/client/graphql/Report';
 
 const ArrivalReportPage = () => {
   const { data: session } = useSession();
   const userName = session?.user?.name || '';
-  const { schedules } = useSchedule();
+  const { schedules, refreshSchedules } = useSchedule();
   const router = useRouter();
-  const [isLoading, setIsLoading] = useState(false);
+
+  // useMutation으로 도착 보고 처리
+  const [createArrivalReport, { loading: isLoading }] = useMutation(
+    CREATE_ARRIVAL_REPORT,
+    {
+      onCompleted: () => {
+        // 성공 시 스케줄 새로고침 후 완료 페이지로 이동
+        refreshSchedules().then(() => {
+          router.push('/report-success?status=arrival');
+        });
+      },
+      onError: (error) => {
+        console.error('도착 보고 오류:', error);
+        alert(error.message || '도착 보고 중 오류가 발생했습니다.');
+      },
+    }
+  );
 
   // 스케줄 데이터를 ScheduleInfoData 형식으로 변환
   const scheduleData: ScheduleInfoData[] = schedules.map((schedule) => ({
@@ -35,34 +52,18 @@ const ArrivalReportPage = () => {
       return;
     }
 
-    setIsLoading(true);
+    // 가장 가까운 시간의 스케줄에 대해 도착 보고
+    const scheduleId = schedules[0].id;
+
     try {
-      // 첫 번째 스케줄에 대해 도착 보고
-      const scheduleId = schedules[0].id;
-
-      const response = await fetch('/api/reports/arrival', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
+      await createArrivalReport({
+        variables: {
+          scheduleId,
         },
-        body: JSON.stringify({ scheduleId }),
       });
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || '도착 보고에 실패했습니다.');
-      }
-
-      // 완료 페이지로 이동 (status를 쿼리 파라미터로 전달)
-      router.push('/report-success?status=arrival');
     } catch (error) {
+      // onError에서 처리되지만, 여기서도 처리 가능
       console.error('도착 보고 오류:', error);
-      const errorMessage =
-        error instanceof Error
-          ? error.message
-          : '도착 보고 중 오류가 발생했습니다.';
-      alert(errorMessage);
-      setIsLoading(false);
     }
   };
 

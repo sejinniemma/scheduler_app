@@ -12,15 +12,33 @@ import { useSession } from 'next-auth/react';
 import { formatScheduleDate } from '@/src/lib/utiles';
 import { useState, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
+import { useMutation } from '@apollo/client/react';
+import { CREATE_DEPARTURE_REPORT } from '@/src/client/graphql/Report';
 
 const DepartureReportPage = () => {
   const { data: session } = useSession();
   const userName = session?.user?.name || '';
-  const { schedules } = useSchedule();
+  const { schedules, refreshSchedules } = useSchedule();
   const router = useRouter();
-  const [isLoading, setIsLoading] = useState(false);
   const [selectedHour, setSelectedHour] = useState<number | null>(null);
   const [selectedMinute, setSelectedMinute] = useState<number | null>(null);
+
+  // useMutation으로 출발 보고 처리
+  const [createDepartureReport, { loading: isLoading }] = useMutation(
+    CREATE_DEPARTURE_REPORT,
+    {
+      onCompleted: () => {
+        // 성공 시 스케줄 새로고침 후 완료 페이지로 이동
+        refreshSchedules().then(() => {
+          router.push('/report-success?status=departure');
+        });
+      },
+      onError: (error) => {
+        console.error('출발 보고 오류:', error);
+        alert(error.message || '출발 보고 중 오류가 발생했습니다.');
+      },
+    }
+  );
 
   const handleTimeChange = (h: number, m: number) => {
     setSelectedHour(h);
@@ -86,37 +104,22 @@ const DepartureReportPage = () => {
       return;
     }
 
-    setIsLoading(true);
+    // 가장 가까운 시간의 스케줄에 대해 출발 보고
+    const scheduleId = schedules[0].id;
+    const estimatedTime = `${String(selectedHour).padStart(2, '0')}:${String(
+      selectedMinute
+    ).padStart(2, '0')}`;
+
     try {
-      // 첫 번째 스케줄에 대해 출발 보고
-      const scheduleId = schedules[0].id;
-      const estimatedTime = `${String(selectedHour).padStart(2, '0')}:${String(
-        selectedMinute
-      ).padStart(2, '0')}`;
-
-      const response = await fetch('/api/reports/departure', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
+      await createDepartureReport({
+        variables: {
+          scheduleId,
+          estimatedTime,
         },
-        body: JSON.stringify({ scheduleId, estimatedTime }),
       });
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || '출발 보고에 실패했습니다.');
-      }
-
-      // 완료 페이지로 이동 (status를 쿼리 파라미터로 전달)
-      router.push('/report-success?status=departure');
     } catch (error) {
+      // onError에서 처리되지만, 여기서도 처리 가능
       console.error('출발 보고 오류:', error);
-      const errorMessage =
-        error instanceof Error
-          ? error.message
-          : '출발 보고 중 오류가 발생했습니다.';
-      alert(errorMessage);
-      setIsLoading(false);
     }
   };
 

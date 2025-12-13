@@ -11,13 +11,31 @@ import { useSession } from 'next-auth/react';
 import { formatScheduleDate } from '@/src/lib/utiles';
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { useMutation } from '@apollo/client/react';
+import { CREATE_COMPLETED_REPORT } from '@/src/client/graphql/Report';
 
 const CompletedReportPage = () => {
   const { data: session } = useSession();
   const userName = session?.user?.name || '';
-  const { schedules } = useSchedule();
+  const { schedules, refreshSchedules } = useSchedule();
   const router = useRouter();
-  const [isLoading, setIsLoading] = useState(false);
+
+  // useMutation으로 종료 보고 처리
+  const [createCompletedReport, { loading: isLoading }] = useMutation(
+    CREATE_COMPLETED_REPORT,
+    {
+      onCompleted: () => {
+        // 성공 시 스케줄 새로고침 후 완료 페이지로 이동
+        refreshSchedules().then(() => {
+          router.push('/report-success?status=completed');
+        });
+      },
+      onError: (error) => {
+        console.error('종료 보고 오류:', error);
+        alert(error.message || '종료 보고 중 오류가 발생했습니다.');
+      },
+    }
+  );
 
   const [checkboxItems, setCheckboxItems] = useState<CheckboxItemData[]>([
     {
@@ -54,37 +72,19 @@ const CompletedReportPage = () => {
       return;
     }
 
-    setIsLoading(true);
-    try {
-      // 첫 번째 스케줄에 대해 종료 보고
-      const scheduleId = schedules[0].id;
+    // 가장 가까운 시간의 스케줄에 대해 종료 보고
+    const scheduleId = schedules[0].id;
 
-      const response = await fetch('/api/reports/completed', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
+    try {
+      await createCompletedReport({
+        variables: {
           scheduleId,
           memo: checkboxItems[0].checked ? memo : undefined,
-        }),
+        },
       });
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || '종료 보고에 실패했습니다.');
-      }
-
-      // 완료 페이지로 이동 (status를 쿼리 파라미터로 전달)
-      router.push('/report-success?status=completed');
     } catch (error) {
+      // onError에서 처리되지만, 여기서도 처리 가능
       console.error('종료 보고 오류:', error);
-      const errorMessage =
-        error instanceof Error
-          ? error.message
-          : '종료 보고 중 오류가 발생했습니다.';
-      alert(errorMessage);
-      setIsLoading(false);
     }
   };
 
