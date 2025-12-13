@@ -5,7 +5,7 @@ import PageHeader from '@/src/components/PageHeader';
 import ScheduleInfo, { ScheduleInfoData } from '@/src/components/ScheduleInfo';
 import MobileLayout from '@/src/layout/MobileLayout';
 import { formatScheduleDate, formatDateForGroup } from '@/src/lib/utiles';
-import { useState, useMemo } from 'react';
+import { useMemo, useState } from 'react';
 import { useQuery, useMutation } from '@apollo/client/react';
 import {
   GET_SCHEDULES,
@@ -13,10 +13,15 @@ import {
 } from '@/src/client/graphql/Schedule';
 import type { Schedule } from '@/src/types/schedule';
 
+interface ScheduleWithStatus extends ScheduleInfoData {
+  id: string;
+  subStatus: 'assigned' | 'completed';
+}
+
 interface ScheduleGroup {
   date: string;
   dateColor: 'blue' | 'red';
-  schedules: ScheduleInfoData[];
+  schedules: ScheduleWithStatus[];
   scheduleIds: string[];
   assignedScheduleIds: string[];
 }
@@ -26,30 +31,34 @@ interface GetSchedulesData {
 }
 
 const ScheduleManagementPage = () => {
+  // 각 스케줄별 로딩 상태 관리
+  const [confirmingScheduleIds, setConfirmingScheduleIds] = useState<
+    Set<string>
+  >(new Set());
+
   // useQuery로 스케줄 데이터 가져오기 (assigned 또는 completed)
   const { data, loading, refetch } = useQuery<GetSchedulesData>(GET_SCHEDULES, {
     fetchPolicy: 'cache-and-network',
   });
 
   // useMutation으로 스케줄 확정 처리
-  const [confirmSchedules, { loading: isConfirming }] = useMutation(
-    CONFIRM_SCHEDULES,
-    {
-      onCompleted: () => {
-        alert('스케줄이 확정되었습니다.');
-        refetch();
-      },
-      onError: (error) => {
-        console.error('스케줄 확정 오류:', error);
-        alert(error.message || '스케줄 확정 중 오류가 발생했습니다.');
-      },
-    }
-  );
+  const [confirmSchedules] = useMutation(CONFIRM_SCHEDULES, {
+    onCompleted: () => {
+      alert('스케줄이 확정되었습니다.');
+      setConfirmingScheduleIds(new Set()); // 로딩 상태 초기화
+      refetch();
+    },
+    onError: (error) => {
+      console.error('스케줄 확정 오류:', error);
+      setConfirmingScheduleIds(new Set()); // 에러 시에도 로딩 상태 초기화
+      alert(error.message || '스케줄 확정 중 오류가 발생했습니다.');
+    },
+  });
 
   const schedules = useMemo(() => data?.schedules || [], [data?.schedules]);
 
-  // 날짜별로 그룹화
-  const scheduleGroups = useMemo(() => {
+  // 날짜별로 그룹화 (assigned와 completed를 분리)
+  const scheduleGroups = useMemo<ScheduleGroup[]>(() => {
     const groups: { [key: string]: Schedule[] } = {};
 
     schedules.forEach((schedule) => {
@@ -59,60 +68,89 @@ const ScheduleManagementPage = () => {
       groups[schedule.date].push(schedule);
     });
 
-    return Object.keys(groups)
+    const result: ScheduleGroup[] = [];
+
+    Object.keys(groups)
       .sort()
-      .map((date) => {
+      .forEach((date) => {
         const dateSchedules = groups[date];
-        // 해당 날짜의 스케줄들 중 하나라도 completed가 있으면 파란색, 모두 assigned면 빨간색
-        const hasCompleted = dateSchedules.some(
+
+        // assigned 스케줄만 필터링
+        const assignedSchedules = dateSchedules.filter(
+          (schedule) => schedule.subStatus === 'assigned'
+        );
+
+        // completed 스케줄만 필터링
+        const completedSchedules = dateSchedules.filter(
           (schedule) => schedule.subStatus === 'completed'
         );
-        const assignedIds = dateSchedules
-          .filter((schedule) => schedule.subStatus === 'assigned')
-          .map((schedule) => schedule.id);
 
-        return {
-          date: formatDateForGroup(date),
-          dateColor: hasCompleted ? 'blue' : 'red',
-          schedules: dateSchedules.map((schedule) => ({
-            groom: schedule.groom || '',
-            bride: schedule.bride || '',
-            date: formatScheduleDate(schedule.date, schedule.time),
-            location: schedule.location || '',
-            venue: schedule.venue || '',
-            memo: schedule.memo || '',
-          })),
-          scheduleIds: dateSchedules.map((schedule) => schedule.id),
-          assignedScheduleIds: assignedIds,
-        };
+        // completed 스케줄이 있으면 파란색 그룹 먼저 추가 (확정된 것이 먼저 보이도록)
+        if (completedSchedules.length > 0) {
+          result.push({
+            date: formatDateForGroup(date),
+            dateColor: 'blue',
+            schedules: completedSchedules.map((schedule) => ({
+              id: schedule.id,
+              groom: schedule.groom || '',
+              bride: schedule.bride || '',
+              date: formatScheduleDate(schedule.date, schedule.time),
+              location: schedule.location || '',
+              venue: schedule.venue || '',
+              memo: schedule.memo || '',
+              subStatus: schedule.subStatus as 'assigned' | 'completed',
+            })),
+            scheduleIds: completedSchedules.map((schedule) => schedule.id),
+            assignedScheduleIds: [],
+          });
+        }
+
+        // assigned 스케줄이 있으면 빨간색 그룹 추가
+        if (assignedSchedules.length > 0) {
+          result.push({
+            date: formatDateForGroup(date),
+            dateColor: 'red',
+            schedules: assignedSchedules.map((schedule) => ({
+              id: schedule.id,
+              groom: schedule.groom || '',
+              bride: schedule.bride || '',
+              date: formatScheduleDate(schedule.date, schedule.time),
+              location: schedule.location || '',
+              venue: schedule.venue || '',
+              memo: schedule.memo || '',
+              subStatus: schedule.subStatus as 'assigned' | 'completed',
+            })),
+            scheduleIds: assignedSchedules.map((schedule) => schedule.id),
+            assignedScheduleIds: assignedSchedules.map(
+              (schedule) => schedule.id
+            ),
+          });
+        }
       });
+
+    return result;
   }, [schedules]);
 
-  // assigned인 스케줄이 있는지 확인
-  const hasAssignedSchedules = useMemo(() => {
-    return scheduleGroups.some((group) => group.assignedScheduleIds.length > 0);
-  }, [scheduleGroups]);
-
-  const handleConfirm = async () => {
-    // assigned인 스케줄 ID만 수집
-    const assignedScheduleIds = scheduleGroups.flatMap(
-      (group) => group.assignedScheduleIds
-    );
-
-    if (assignedScheduleIds.length === 0) {
-      alert('확정할 스케줄이 없습니다.');
-      return;
-    }
+  // 개별 스케줄 확정 처리
+  const handleConfirmSchedule = async (scheduleId: string) => {
+    // 해당 스케줄의 로딩 상태 시작
+    setConfirmingScheduleIds((prev) => new Set(prev).add(scheduleId));
 
     try {
       await confirmSchedules({
         variables: {
-          scheduleIds: assignedScheduleIds,
+          scheduleIds: [scheduleId],
         },
       });
     } catch (error) {
       // onError에서 처리되지만, 여기서도 처리 가능
       console.error('스케줄 확정 오류:', error);
+      // 에러 시 로딩 상태 제거
+      setConfirmingScheduleIds((prev) => {
+        const next = new Set(prev);
+        next.delete(scheduleId);
+        return next;
+      });
     }
   };
 
@@ -148,20 +186,29 @@ const ScheduleManagementPage = () => {
                 >
                   {group.date}
                 </p>
-                <div className='flex flex-col gap-[10px]'>
+                <div className='flex flex-col gap-[30px]'>
                   {group.schedules.map((schedule, scheduleIndex) => (
-                    <ScheduleInfo key={scheduleIndex} schedule={schedule} />
+                    <div
+                      key={scheduleIndex}
+                      className='flex flex-col gap-[10px]'
+                    >
+                      <ScheduleInfo schedule={schedule} />
+                      {schedule.subStatus === 'assigned' && (
+                        <Button
+                          text={
+                            confirmingScheduleIds.has(schedule.id)
+                              ? '확정 중...'
+                              : '스케줄 확정'
+                          }
+                          onClick={() => handleConfirmSchedule(schedule.id)}
+                          disabled={confirmingScheduleIds.has(schedule.id)}
+                        />
+                      )}
+                    </div>
                   ))}
                 </div>
               </div>
             ))}
-            {hasAssignedSchedules && (
-              <Button
-                text={isConfirming ? '확정 중...' : '스케줄 확정'}
-                onClick={handleConfirm}
-                disabled={isConfirming}
-              />
-            )}
           </>
         )}
       </ContentLayout>

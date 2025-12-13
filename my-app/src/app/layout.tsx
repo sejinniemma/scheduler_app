@@ -42,7 +42,7 @@ export default async function RootLayout({
         <SessionProviderWrapper>
           <ApolloClientProvider client={client}>
             <ScheduleProviderWrapper initialSchedules={schedules}>
-              {children}
+        {children}
             </ScheduleProviderWrapper>
           </ApolloClientProvider>
         </SessionProviderWrapper>
