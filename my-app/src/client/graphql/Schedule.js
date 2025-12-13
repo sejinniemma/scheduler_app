@@ -2,8 +2,8 @@ import { gql } from '@apollo/client';
 
 // Schedule Queries
 export const GET_SCHEDULES = gql`
-  query GetSchedules($date: String, $subStatus: String) {
-    schedules(date: $date, subStatus: $subStatus) {
+  query GetSchedules($date: String, $subStatus: String, $status: String) {
+    schedules(date: $date, subStatus: $subStatus, status: $status) {
       id
       mainUser
       subUser

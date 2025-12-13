@@ -23,7 +23,7 @@ export const typeDefs = gql`
   }
 
   type Query {
-    schedules(date: String, subStatus: String): [Schedule!]!
+    schedules(date: String, subStatus: String, status: String): [Schedule!]!
     schedule(id: ID!): Schedule
   }
 
@@ -70,7 +70,7 @@ export const typeDefs = gql`
 
 export const resolvers = {
   Query: {
-    schedules: async (parent, { date, subStatus }, context) => {
+    schedules: async (parent, { date, subStatus, status }, context) => {
       if (!context.user) {
         throw new Error('인증이 필요합니다.');
       }
@@ -90,6 +90,9 @@ export const resolvers = {
       } else {
         // subStatus가 없으면 assigned와 completed만 가져오기
         query.subStatus = { $in: ['assigned', 'completed'] };
+      }
+      if (status) {
+        query.status = status;
       }
 
       const schedules = await Schedule.find(query);
