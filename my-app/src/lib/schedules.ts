@@ -1,9 +1,9 @@
 import { getServerSession } from 'next-auth';
 import { authOptions } from './auth';
-import ScheduleModel from '../db/models/Schedule';
-import ReportModel from '../db/models/Report';
-import UserModel from '../db/models/User';
-import { connectToDatabase } from '../db/mongodb';
+import ScheduleModel from '../app/api/db/models/Schedule';
+import ReportModel from '../app/api/db/models/Report';
+import UserModel from '../app/api/db/models/User';
+import { connectToDatabase } from '../app/api/db/mongodb';
 import { getToday } from './utiles';
 import type { NextAuthOptions } from 'next-auth';
 import type { Schedule } from '../types/schedule';

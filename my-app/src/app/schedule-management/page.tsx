@@ -7,7 +7,7 @@ import MobileLayout from '@/src/layout/MobileLayout';
 import { formatScheduleDate, formatDateForGroup } from '@/src/lib/utiles';
 import { useState, useMemo } from 'react';
 import { useQuery } from '@apollo/client/react';
-import { GET_SCHEDULES } from '@/src/graphql/Schedule';
+import { GET_SCHEDULES } from '@/src/client/graphql/Schedule';
 import type { Schedule } from '@/src/types/schedule';
 
 interface ScheduleGroup {
