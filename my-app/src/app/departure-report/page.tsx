@@ -7,29 +7,47 @@ import PageHeader from '@/src/components/PageHeader';
 import ScheduleInfo, { ScheduleInfoData } from '@/src/components/ScheduleInfo';
 import TimePickerWheel from '@/src/components/TimePickerWheel';
 import MobileLayout from '@/src/layout/MobileLayout';
-import { useSchedule } from '@/src/contexts/ScheduleContext';
 import { useSession } from 'next-auth/react';
-import { formatScheduleDate } from '@/src/lib/utiles';
+import { formatScheduleDate, getToday } from '@/src/lib/utiles';
 import { useState, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
-import { useMutation } from '@apollo/client/react';
+import { useMutation, useQuery } from '@apollo/client/react';
 import { CREATE_DEPARTURE_REPORT } from '@/src/client/graphql/Report';
+import { GET_SCHEDULES } from '@/src/client/graphql/Schedule';
+import type { Schedule } from '@/src/types/schedule';
+
+interface GetSchedulesData {
+  schedules: Schedule[];
+}
 
 const DepartureReportPage = () => {
   const { data: session } = useSession();
   const userName = session?.user?.name || '';
-  const { schedules, refreshSchedules } = useSchedule();
   const router = useRouter();
+  const today = getToday();
   const [selectedHour, setSelectedHour] = useState<number | null>(null);
   const [selectedMinute, setSelectedMinute] = useState<number | null>(null);
 
+  // 서버에서 오늘 날짜의 assigned이고 wakeup인 스케줄 중 가장 가까운 시간 하나만 가져오기
+  const { data, loading, refetch } = useQuery<GetSchedulesData>(GET_SCHEDULES, {
+    variables: {
+      date: today,
+      subStatus: 'assigned',
+      status: 'wakeup',
+    },
+    fetchPolicy: 'cache-and-network',
+  });
+
+  // 서버에서 이미 정렬되어 있으므로 첫 번째 스케줄만 사용
+  const targetSchedule = data?.schedules?.[0] || null;
+
   // useMutation으로 출발 보고 처리
-  const [createDepartureReport, { loading: isLoading }] = useMutation(
+  const [createDepartureReport, { loading: isSubmitting }] = useMutation(
     CREATE_DEPARTURE_REPORT,
     {
       onCompleted: () => {
         // 성공 시 스케줄 새로고침 후 완료 페이지로 이동
-        refreshSchedules().then(() => {
+        refetch().then(() => {
           router.push('/report-success?status=departure');
         });
       },
@@ -79,17 +97,21 @@ const DepartureReportPage = () => {
     allChecked && selectedHour !== null && selectedMinute !== null;
 
   // 스케줄 데이터를 ScheduleInfoData 형식으로 변환
-  const scheduleData: ScheduleInfoData[] = schedules.map((schedule) => ({
-    groom: schedule.groom || '',
-    bride: schedule.bride || '',
-    date: formatScheduleDate(schedule.date, schedule.time),
-    location: schedule.location || '',
-    venue: schedule.venue || '',
-    memo: schedule.memo || '',
-  }));
+  const scheduleData: ScheduleInfoData[] = targetSchedule
+    ? [
+        {
+          groom: targetSchedule.groom || '',
+          bride: targetSchedule.bride || '',
+          date: formatScheduleDate(targetSchedule.date, targetSchedule.time),
+          location: targetSchedule.location || '',
+          venue: targetSchedule.venue || '',
+          memo: targetSchedule.memo || '',
+        },
+      ]
+    : [];
 
   const handleDepartureReport = async () => {
-    if (schedules.length === 0) {
+    if (!targetSchedule) {
       alert('보고할 스케줄이 없습니다.');
       return;
     }
@@ -104,8 +126,6 @@ const DepartureReportPage = () => {
       return;
     }
 
-    // 가장 가까운 시간의 스케줄에 대해 출발 보고
-    const scheduleId = schedules[0].id;
     const estimatedTime = `${String(selectedHour).padStart(2, '0')}:${String(
       selectedMinute
     ).padStart(2, '0')}`;
@@ -113,7 +133,7 @@ const DepartureReportPage = () => {
     try {
       await createDepartureReport({
         variables: {
-          scheduleId,
+          scheduleId: targetSchedule.id,
           estimatedTime,
         },
       });
@@ -157,9 +177,14 @@ const DepartureReportPage = () => {
           </div>
         </div>
         <Button
-          text={isLoading ? '보고 중...' : '출발 보고하기'}
+          text={isSubmitting ? '보고 중...' : '출발 보고하기'}
           onClick={handleDepartureReport}
-          disabled={!isButtonEnabled || isLoading || scheduleData.length === 0}
+          disabled={
+            !isButtonEnabled ||
+            loading ||
+            isSubmitting ||
+            scheduleData.length === 0
+          }
         />
       </ContentLayout>
     </MobileLayout>
