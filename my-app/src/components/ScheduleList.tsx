@@ -1,5 +1,6 @@
 'use client';
 
+import { useMemo } from 'react';
 import ProgressBar from './ProgressBar';
 
 interface Schedule {
@@ -49,7 +50,7 @@ export default function ScheduleListContent({ schedules }: ScheduleListProps) {
 
   return (
     <>
-      {schedules.map((schedule) => {
+      {schedules.map((schedule, index) => {
         // status에 따라 currentStep 결정
         const progressStep = getCurrentStepFromStatus(schedule.status);
 
@@ -58,7 +59,7 @@ export default function ScheduleListContent({ schedules }: ScheduleListProps) {
             {/* Schedule Info */}
             <div
               className={`flex items-center text-caption1 gap-[10px] ${
-                schedule.status === 'ongoing' ? 'text-dark' : 'text-disabled'
+                index === 0 ? 'text-dark' : 'text-disabled'
               }`}
             >
               <span>{schedule.time}</span>

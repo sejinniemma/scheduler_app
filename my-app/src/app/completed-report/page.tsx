@@ -6,27 +6,45 @@ import PageHeader from '@/src/components/PageHeader';
 import ScheduleInfo, { ScheduleInfoData } from '@/src/components/ScheduleInfo';
 import MobileLayout from '@/src/layout/MobileLayout';
 import CheckboxList, { CheckboxItemData } from '@/src/components/CheckboxList';
-import { useSchedule } from '@/src/contexts/ScheduleContext';
 import { useSession } from 'next-auth/react';
-import { formatScheduleDate } from '@/src/lib/utiles';
+import { formatScheduleDate, getToday } from '@/src/lib/utiles';
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { useMutation } from '@apollo/client/react';
+import { useMutation, useQuery } from '@apollo/client/react';
 import { CREATE_COMPLETED_REPORT } from '@/src/client/graphql/Report';
+import { GET_SCHEDULES } from '@/src/client/graphql/Schedule';
+import type { Schedule } from '@/src/types/schedule';
+
+interface GetSchedulesData {
+  schedules: Schedule[];
+}
 
 const CompletedReportPage = () => {
   const { data: session } = useSession();
   const userName = session?.user?.name || '';
-  const { schedules, refreshSchedules } = useSchedule();
   const router = useRouter();
+  const today = getToday();
+
+  // 서버에서 오늘 날짜의 assigned이고 arrival인 스케줄 중 가장 가까운 시간 하나만 가져오기
+  const { data, loading, refetch } = useQuery<GetSchedulesData>(GET_SCHEDULES, {
+    variables: {
+      date: today,
+      subStatus: 'assigned',
+      status: 'arrival',
+    },
+    fetchPolicy: 'cache-and-network',
+  });
+
+  // 서버에서 이미 정렬되어 있으므로 첫 번째 스케줄만 사용
+  const targetSchedule = data?.schedules?.[0] || null;
 
   // useMutation으로 종료 보고 처리
-  const [createCompletedReport, { loading: isLoading }] = useMutation(
+  const [createCompletedReport, { loading: isSubmitting }] = useMutation(
     CREATE_COMPLETED_REPORT,
     {
       onCompleted: () => {
         // 성공 시 스케줄 새로고침 후 완료 페이지로 이동
-        refreshSchedules().then(() => {
+        refetch().then(() => {
           router.push('/report-success?status=completed');
         });
       },
@@ -57,28 +75,29 @@ const CompletedReportPage = () => {
   };
 
   // 스케줄 데이터를 ScheduleInfoData 형식으로 변환
-  const scheduleData: ScheduleInfoData[] = schedules.map((schedule) => ({
-    groom: schedule.groom || '',
-    bride: schedule.bride || '',
-    date: formatScheduleDate(schedule.date, schedule.time),
-    location: schedule.location || '',
-    venue: schedule.venue || '',
-    memo: schedule.memo || '',
-  }));
+  const scheduleData: ScheduleInfoData[] = targetSchedule
+    ? [
+        {
+          groom: targetSchedule.groom || '',
+          bride: targetSchedule.bride || '',
+          date: formatScheduleDate(targetSchedule.date, targetSchedule.time),
+          location: targetSchedule.location || '',
+          venue: targetSchedule.venue || '',
+          memo: targetSchedule.memo || '',
+        },
+      ]
+    : [];
 
   const handleCompletedReport = async () => {
-    if (schedules.length === 0) {
+    if (!targetSchedule) {
       alert('보고할 스케줄이 없습니다.');
       return;
     }
 
-    // 가장 가까운 시간의 스케줄에 대해 종료 보고
-    const scheduleId = schedules[0].id;
-
     try {
       await createCompletedReport({
         variables: {
-          scheduleId,
+          scheduleId: targetSchedule.id,
           memo: checkboxItems[0].checked ? memo : undefined,
         },
       });
@@ -140,9 +159,9 @@ const CompletedReportPage = () => {
         )}
 
         <Button
-          text={isLoading ? '보고 중...' : '촬영 종료 보고하기'}
+          text={isSubmitting ? '보고 중...' : '촬영 종료 보고하기'}
           onClick={handleCompletedReport}
-          disabled={isLoading || scheduleData.length === 0}
+          disabled={loading || isSubmitting || scheduleData.length === 0}
         />
       </ContentLayout>
     </MobileLayout>
