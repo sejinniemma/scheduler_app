@@ -11,7 +11,7 @@ import { useEffect } from 'react';
 const MainPage = () => {
   const { data: session } = useSession();
   const userName = session?.user?.name || '';
-  const { schedules, refetch } = useSchedule();
+  const { schedules, refetch, isLoading } = useSchedule();
 
   // 페이지 포커스 시 스케줄 새로고침
   useEffect(() => {
@@ -24,7 +24,6 @@ const MainPage = () => {
       window.removeEventListener('focus', handleFocus);
     };
   }, [refetch]);
-
   // Context에서 가져온 스케줄 데이터 변환
   const transformedSchedules = schedules.map((schedule) => ({
     id: schedule.id,
@@ -133,8 +132,12 @@ const MainPage = () => {
 
           {/* Schedule List */}
           <div className='flex flex-col gap-[20px]'>
-            {transformedSchedules.length === 0 ? (
+            {isLoading ? (
               <ScheduleListLoading />
+            ) : transformedSchedules.length === 0 ? (
+              <p className='text-caption1 text-default text-center py-[20px]'>
+                오늘 해당하는 스케줄이 없습니다.
+              </p>
             ) : (
               <ScheduleListContent schedules={transformedSchedules} />
             )}

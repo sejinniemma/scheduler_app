@@ -1,6 +1,6 @@
 import NextAuth from 'next-auth';
 import CredentialsProvider from 'next-auth/providers/credentials';
-import { verifyUserCredentials } from '@/src/db/handlers/User';
+import { verifyUserCredentials } from '../db/handlers/User';
 
 export const authOptions = {
   providers: [
@@ -21,7 +21,7 @@ export const authOptions = {
             credentials.phone,
             credentials.name
           );
-
+          console.log(`result: ${result}`);
           if (!result.success) {
             throw new Error(result.error);
           }
