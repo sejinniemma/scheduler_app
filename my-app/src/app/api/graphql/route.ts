@@ -3,7 +3,7 @@ import { ApolloServer } from '@apollo/server';
 import { startServerAndCreateNextHandler } from '@as-integrations/next';
 import type { NextRequest } from 'next/server';
 import { getServerSession } from 'next-auth';
-import { authOptions } from '../../../lib/auth';
+import { authOptions } from '../auth/authOptions';
 import type { NextAuthOptions } from 'next-auth';
 
 import { typeDefs as UserTypeDefs } from '../db/handlers/User';
