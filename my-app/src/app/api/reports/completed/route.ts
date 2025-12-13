@@ -1,10 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
-import { authOptions } from '@/src/lib/auth';
-import ScheduleModel from '@/src/db/models/Schedule';
-import ReportModel from '@/src/db/models/Report';
-import UserModel from '@/src/db/models/User';
-import { connectToDatabase } from '@/src/db/mongodb';
+import { authOptions } from '@/src/app/api/auth/authOptions';
+import ScheduleModel from '@/src/app/api/db/models/Schedule';
+import ReportModel from '@/src/app/api/db/models/Report';
+import UserModel from '@/src/app/api/db/models/User';
+import { connectToDatabase } from '@/src/app/api/db/mongodb';
 import type { NextAuthOptions } from 'next-auth';
 
 export async function POST(request: NextRequest) {

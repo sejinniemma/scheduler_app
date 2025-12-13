@@ -88,3 +88,12 @@ export const DELETE_SCHEDULE = gql`
     deleteSchedule(id: $id)
   }
 `;
+
+export const CONFIRM_SCHEDULES = gql`
+  mutation ConfirmSchedules($scheduleIds: [ID!]!) {
+    confirmSchedules(scheduleIds: $scheduleIds) {
+      success
+      updatedCount
+    }
+  }
+`;

@@ -6,8 +6,11 @@ import ScheduleInfo, { ScheduleInfoData } from '@/src/components/ScheduleInfo';
 import MobileLayout from '@/src/layout/MobileLayout';
 import { formatScheduleDate, formatDateForGroup } from '@/src/lib/utiles';
 import { useState, useMemo } from 'react';
-import { useQuery } from '@apollo/client/react';
-import { GET_SCHEDULES } from '@/src/client/graphql/Schedule';
+import { useQuery, useMutation } from '@apollo/client/react';
+import {
+  GET_SCHEDULES,
+  CONFIRM_SCHEDULES,
+} from '@/src/client/graphql/Schedule';
 import type { Schedule } from '@/src/types/schedule';
 
 interface ScheduleGroup {
@@ -23,12 +26,25 @@ interface GetSchedulesData {
 }
 
 const ScheduleManagementPage = () => {
-  const [isConfirming, setIsConfirming] = useState(false);
-
   // useQuery로 스케줄 데이터 가져오기 (assigned 또는 completed)
   const { data, loading, refetch } = useQuery<GetSchedulesData>(GET_SCHEDULES, {
     fetchPolicy: 'cache-and-network',
   });
+
+  // useMutation으로 스케줄 확정 처리
+  const [confirmSchedules, { loading: isConfirming }] = useMutation(
+    CONFIRM_SCHEDULES,
+    {
+      onCompleted: () => {
+        alert('스케줄이 확정되었습니다.');
+        refetch();
+      },
+      onError: (error) => {
+        console.error('스케줄 확정 오류:', error);
+        alert(error.message || '스케줄 확정 중 오류가 발생했습니다.');
+      },
+    }
+  );
 
   const schedules = useMemo(() => data?.schedules || [], [data?.schedules]);
 
@@ -88,33 +104,15 @@ const ScheduleManagementPage = () => {
       return;
     }
 
-    setIsConfirming(true);
     try {
-      const response = await fetch('/api/schedules/confirm', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
+      await confirmSchedules({
+        variables: {
+          scheduleIds: assignedScheduleIds,
         },
-        body: JSON.stringify({ scheduleIds: assignedScheduleIds }),
       });
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || '스케줄 확정에 실패했습니다.');
-      }
-
-      alert('스케줄이 확정되었습니다.');
-      // GraphQL 쿼리 다시 가져오기
-      await refetch();
     } catch (error) {
+      // onError에서 처리되지만, 여기서도 처리 가능
       console.error('스케줄 확정 오류:', error);
-      const errorMessage =
-        error instanceof Error
-          ? error.message
-          : '스케줄 확정 중 오류가 발생했습니다.';
-      alert(errorMessage);
-    } finally {
-      setIsConfirming(false);
     }
   };
 

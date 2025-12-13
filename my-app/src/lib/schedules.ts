@@ -1,5 +1,5 @@
 import { getServerSession } from 'next-auth';
-import { authOptions } from './auth';
+import { authOptions } from '../app/api/auth/authOptions';
 import ScheduleModel from '../app/api/db/models/Schedule';
 import ReportModel from '../app/api/db/models/Report';
 import UserModel from '../app/api/db/models/User';
