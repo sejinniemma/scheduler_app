@@ -57,7 +57,7 @@ const DepartureReportPage = () => {
 
   // 서버에서 이미 정렬되어 있으므로 첫 번째 스케줄만 사용
   const targetSchedule = data?.schedules?.[0] || null;
-  console.log('targetSchedule', targetSchedule);
+
   // 해당 스케줄의 Report 조회
   const { data: reportData } = useQuery<GetReportsByScheduleData>(
     GET_REPORTS_BY_SCHEDULE,
@@ -69,7 +69,7 @@ const DepartureReportPage = () => {
       fetchPolicy: 'cache-and-network',
     }
   );
-  console.log('reportData', reportData);
+
   const existingReport = reportData?.reportsBySchedule?.[0] || null;
 
   // useMutation으로 출발 보고 처리 (기존 Report 업데이트)

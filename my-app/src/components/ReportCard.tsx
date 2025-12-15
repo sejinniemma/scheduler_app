@@ -9,6 +9,7 @@ export interface Report {
   icon: string;
   href: string;
   disabled?: boolean;
+  onClick?: () => void;
 }
 
 interface ReportCardProps {
@@ -17,9 +18,20 @@ interface ReportCardProps {
 
 const ReportCard = ({ report }: ReportCardProps) => {
   const router = useRouter();
+  
+  const handleClick = () => {
+    if (report.disabled) return;
+    
+    if (report.onClick) {
+      report.onClick();
+    } else {
+      router.push(report.href);
+    }
+  };
+  
   return (
     <div
-      onClick={() => !report.disabled && router.push(report.href)}
+      onClick={handleClick}
       className={`flex flex-col gap-[8px] w-full h-[130px] p-[12px] border border-line-edge rounded-xl ${
         report.disabled ? 'cursor-not-allowed' : 'cursor-pointer'
       }`}

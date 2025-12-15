@@ -6,22 +6,30 @@ import { useSchedule } from '@/src/contexts/ScheduleContext';
 import { useSession } from 'next-auth/react';
 import { ScheduleListLoading } from '@/src/components/ScheduleList';
 import ScheduleListContent from '@/src/components/ScheduleList';
-import { useEffect } from 'react';
+import { useEffect, useMemo, useCallback } from 'react';
+import { useRouter } from 'next/navigation';
 
 const MainPage = () => {
   const { data: session } = useSession();
   const userName = session?.user?.name || '';
   const { schedules, refetch, isLoading } = useSchedule();
+  const router = useRouter();
 
-  // 페이지 포커스 시 스케줄 새로고침
+  // 페이지가 보일 때 스케줄 새로고침 (다른 페이지에서 돌아올 때)
   useEffect(() => {
-    const handleFocus = () => {
-      refetch();
+    // 컴포넌트 마운트 시 한 번 실행
+    refetch();
+
+    // 페이지가 보일 때마다 실행 (visibilitychange 이벤트)
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'visible') {
+        refetch();
+      }
     };
 
-    window.addEventListener('focus', handleFocus);
+    document.addEventListener('visibilitychange', handleVisibilityChange);
     return () => {
-      window.removeEventListener('focus', handleFocus);
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
     };
   }, [refetch]);
   // Context에서 가져온 스케줄 데이터 변환
@@ -43,77 +51,146 @@ const MainPage = () => {
 
   // 가장 가까운 시간의 스케줄 상태를 확인하여 보고 완료 여부 판단
   // 순서: 기상(wakeup) -> 출발(departure) -> 도착(arrival) -> 종료(completed)
-  const getReportStatus = (reportType: string) => {
-    if (schedules.length === 0) return false;
+  const getReportStatus = useCallback(
+    (reportType: string) => {
+      if (schedules.length === 0) return false;
 
-    // 가장 가까운 시간의 스케줄 (첫 번째 스케줄, 이미 시간 순으로 정렬됨)
-    const nearestSchedule = schedules[0];
-    const scheduleStatus = nearestSchedule.status;
+      // 가장 가까운 시간의 스케줄 (첫 번째 스케줄, 이미 시간 순으로 정렬됨)
+      const nearestSchedule = schedules[0];
+      const scheduleStatus = nearestSchedule.status;
 
-    // 보고 순서에 따라 해당 단계 이상이면 disabled
-    switch (reportType) {
-      case 'wakeup':
-        // 기상 보고: wakeup 이상이면 disabled
-        return (
-          scheduleStatus === 'wakeup' ||
-          scheduleStatus === 'departure' ||
-          scheduleStatus === 'arrival' ||
-          scheduleStatus === 'completed'
-        );
-      case 'departure':
-        // 출발 보고: departure 이상이면 disabled
-        return (
-          scheduleStatus === 'departure' ||
-          scheduleStatus === 'arrival' ||
-          scheduleStatus === 'completed'
-        );
-      case 'arrival':
-        // 도착 보고: arrival 이상이면 disabled
-        return scheduleStatus === 'arrival' || scheduleStatus === 'completed';
-      case 'completed':
-        // 종료 보고: completed이면 disabled
-        return scheduleStatus === 'completed';
-      default:
-        return false;
-    }
-  };
+      // 보고 순서에 따라 해당 단계 이상이면 disabled
+      switch (reportType) {
+        case 'wakeup':
+          // 기상 보고: wakeup 이상이면 disabled
+          return (
+            scheduleStatus === 'wakeup' ||
+            scheduleStatus === 'departure' ||
+            scheduleStatus === 'arrival' ||
+            scheduleStatus === 'completed'
+          );
+        case 'departure':
+          // 출발 보고: departure 이상이면 disabled
+          return (
+            scheduleStatus === 'departure' ||
+            scheduleStatus === 'arrival' ||
+            scheduleStatus === 'completed'
+          );
+        case 'arrival':
+          // 도착 보고: arrival 이상이면 disabled
+          return scheduleStatus === 'arrival' || scheduleStatus === 'completed';
+        case 'completed':
+          // 종료 보고: completed이면 disabled
+          return scheduleStatus === 'completed';
+        default:
+          return false;
+      }
+    },
+    [schedules]
+  );
 
-  const reports: Report[] = [
-    {
-      title: '기상 보고',
-      description: `오늘의 스케줄을 보고\n기상을 보고 할 수 있어요`,
-      icon: '/images/icons/alarm.png',
-      href: '/morning-report',
-      disabled: getReportStatus('wakeup'),
+  // 보고 순서 체크 함수
+  const checkReportOrder = useCallback(
+    (reportType: string): boolean => {
+      if (schedules.length === 0) return true;
+
+      const nearestSchedule = schedules[0];
+      const scheduleStatus = nearestSchedule.status;
+
+      switch (reportType) {
+        case 'departure':
+          // 출발보고는 기상보고가 완료되어야 함
+          if (
+            scheduleStatus !== 'wakeup' &&
+            scheduleStatus !== 'departure' &&
+            scheduleStatus !== 'arrival' &&
+            scheduleStatus !== 'completed'
+          ) {
+            alert('기상 보고를 먼저 완료해주세요.');
+            return false;
+          }
+          return true;
+        case 'arrival':
+          // 도착보고는 출발보고가 완료되어야 함
+          if (
+            scheduleStatus !== 'departure' &&
+            scheduleStatus !== 'arrival' &&
+            scheduleStatus !== 'completed'
+          ) {
+            alert('출발 보고를 먼저 완료해주세요.');
+            return false;
+          }
+          return true;
+        case 'completed':
+          // 종료보고는 도착보고가 완료되어야 함
+          if (scheduleStatus !== 'arrival' && scheduleStatus !== 'completed') {
+            alert('도착 보고를 먼저 완료해주세요.');
+            return false;
+          }
+          return true;
+        default:
+          return true;
+      }
     },
-    {
-      title: '출발 보고',
-      description: '오늘 스케줄을 보고\n출발을 보고 할 수 있어요',
-      icon: '/images/icons/departure.png',
-      href: '/departure-report',
-      disabled: getReportStatus('departure'),
+    [schedules]
+  );
+
+  // 보고 카드 클릭 핸들러
+  const handleReportClick = useCallback(
+    (reportType: string, href: string) => {
+      if (checkReportOrder(reportType)) {
+        router.push(href);
+      }
     },
-    {
-      title: '도착 보고',
-      description: '촬영 장소에 도착하셨나요?\n 도착 보고를 할 수 있어요',
-      icon: '/images/icons/arrival.png',
-      href: '/arrival-report',
-      disabled: getReportStatus('arrival'),
-    },
-    {
-      title: '종료 보고',
-      description: '촬영을 마치 셨나요?\n 종료 보고를 할 수 있어요',
-      icon: '/images/icons/completed.png',
-      href: '/completed-report',
-      disabled: getReportStatus('completed'),
-    },
-    {
+    [checkReportOrder, router]
+  );
+
+  const reportCards: Report[] = useMemo(
+    () => [
+      {
+        title: '기상 보고',
+        description: `오늘의 스케줄을 보고\n기상을 보고 할 수 있어요`,
+        icon: '/images/icons/alarm.png',
+        href: '/morning-report',
+        disabled: getReportStatus('wakeup'),
+      },
+      {
+        title: '출발 보고',
+        description: '오늘 스케줄을 보고\n출발을 보고 할 수 있어요',
+        icon: '/images/icons/departure.png',
+        href: '/departure-report',
+        disabled: getReportStatus('departure'),
+        onClick: () => handleReportClick('departure', '/departure-report'),
+      },
+      {
+        title: '도착 보고',
+        description: '촬영 장소에 도착하셨나요?\n 도착 보고를 할 수 있어요',
+        icon: '/images/icons/arrival.png',
+        href: '/arrival-report',
+        disabled: getReportStatus('arrival'),
+        onClick: () => handleReportClick('arrival', '/arrival-report'),
+      },
+      {
+        title: '종료 보고',
+        description: '촬영을 마치 셨나요?\n 종료 보고를 할 수 있어요',
+        icon: '/images/icons/completed.png',
+        href: '/completed-report',
+        disabled: getReportStatus('completed'),
+        onClick: () => handleReportClick('completed', '/completed-report'),
+      },
+    ],
+    [getReportStatus, handleReportClick]
+  );
+
+  const scheduleManagementCard: Report = useMemo(
+    () => ({
       title: '내 스케줄 확정/확인',
       description: '스케줄을 한 번에 확인하거나\n 확정할 수 있어요',
       icon: '/images/icons/calendar.png',
       href: '/schedule-management',
-    },
-  ];
+    }),
+    []
+  );
 
   return (
     <MobileLayout>
@@ -146,9 +223,16 @@ const MainPage = () => {
 
         {/* 보고 List */}
         <div className='grid grid-cols-2 gap-[10px] w-full'>
-          {reports.map((report, index) => (
-            <ReportCard key={index} report={report} />
-          ))}
+          {/* 보고 카드들 - 스케줄이 있을 때만 표시 */}
+          {!isLoading && transformedSchedules.length > 0 && (
+            <>
+              {reportCards.map((report, index) => (
+                <ReportCard key={index} report={report} />
+              ))}
+            </>
+          )}
+          {/* 스케줄 관리 카드 - 항상 표시 */}
+          <ReportCard report={scheduleManagementCard} />
         </div>
       </section>
     </MobileLayout>
