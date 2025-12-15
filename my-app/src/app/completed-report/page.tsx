@@ -11,12 +11,26 @@ import { formatScheduleDate, getToday } from '@/src/lib/utiles';
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useMutation, useQuery } from '@apollo/client/react';
-import { CREATE_COMPLETED_REPORT } from '@/src/client/graphql/Report';
+import { UPDATE_COMPLETED_REPORT, GET_REPORTS_BY_SCHEDULE } from '@/src/client/graphql/Report';
 import { GET_SCHEDULES } from '@/src/client/graphql/Schedule';
 import type { Schedule } from '@/src/types/schedule';
 
 interface GetSchedulesData {
   schedules: Schedule[];
+}
+
+interface GetReportsByScheduleData {
+  reportsBySchedule: Array<{
+    id: string;
+    scheduleId: string;
+    userId: string;
+    status: string;
+    estimatedTime?: string;
+    currentStep: number;
+    memo?: string;
+    createdAt: string;
+    updatedAt: string;
+  }>;
 }
 
 const CompletedReportPage = () => {
@@ -26,7 +40,7 @@ const CompletedReportPage = () => {
   const today = getToday();
 
   // 서버에서 오늘 날짜의 assigned이고 arrival인 스케줄 중 가장 가까운 시간 하나만 가져오기
-  const { data, loading, refetch } = useQuery<GetSchedulesData>(GET_SCHEDULES, {
+  const { data, loading } = useQuery<GetSchedulesData>(GET_SCHEDULES, {
     variables: {
       date: today,
       subStatus: 'assigned',
@@ -38,15 +52,27 @@ const CompletedReportPage = () => {
   // 서버에서 이미 정렬되어 있으므로 첫 번째 스케줄만 사용
   const targetSchedule = data?.schedules?.[0] || null;
 
-  // useMutation으로 종료 보고 처리
-  const [createCompletedReport, { loading: isSubmitting }] = useMutation(
-    CREATE_COMPLETED_REPORT,
+  // 해당 스케줄의 Report 조회
+  const { data: reportData } = useQuery<GetReportsByScheduleData>(
+    GET_REPORTS_BY_SCHEDULE,
+    {
+      variables: {
+        scheduleId: targetSchedule?.id || '',
+      },
+      skip: !targetSchedule || !targetSchedule.id,
+      fetchPolicy: 'cache-and-network',
+    }
+  );
+
+  const existingReport = reportData?.reportsBySchedule?.[0] || null;
+
+  // useMutation으로 종료 보고 처리 (기존 Report 업데이트)
+  const [updateCompletedReport, { loading: isSubmitting }] = useMutation(
+    UPDATE_COMPLETED_REPORT,
     {
       onCompleted: () => {
-        // 성공 시 스케줄 새로고침 후 완료 페이지로 이동
-        refetch().then(() => {
-          router.push('/report-success?status=completed');
-        });
+        // 성공 시 완료 페이지로 이동 (스케줄 상태는 서버에서 이미 업데이트됨)
+        router.push('/report-success?status=completed');
       },
       onError: (error) => {
         console.error('종료 보고 오류:', error);
@@ -94,10 +120,15 @@ const CompletedReportPage = () => {
       return;
     }
 
+    if (!existingReport) {
+      alert('도착 보고를 먼저 완료해주세요.');
+      return;
+    }
+
     try {
-      await createCompletedReport({
+      await updateCompletedReport({
         variables: {
-          scheduleId: targetSchedule.id,
+          id: existingReport.id,
           memo: checkboxItems[0].checked ? memo : undefined,
         },
       });
@@ -161,7 +192,7 @@ const CompletedReportPage = () => {
         <Button
           text={isSubmitting ? '보고 중...' : '촬영 종료 보고하기'}
           onClick={handleCompletedReport}
-          disabled={loading || isSubmitting || scheduleData.length === 0}
+          disabled={loading || isSubmitting || scheduleData.length === 0 || !existingReport}
         />
       </ContentLayout>
     </MobileLayout>

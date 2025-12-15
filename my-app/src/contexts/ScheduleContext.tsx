@@ -58,7 +58,7 @@ export function ScheduleProvider({
   const refetch = useCallback(async () => {
     await refreshSchedules();
   }, [refreshSchedules]);
-  console.log(`schedules: ${schedules}`);
+
   return (
     <ScheduleContext.Provider
       value={{

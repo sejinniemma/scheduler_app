@@ -88,6 +88,7 @@ export async function getTodaySchedules(): Promise<Schedule[]> {
       $or: [{ mainUser: session.user.id }, { subUser: session.user.id }],
       date: getToday(),
       subStatus: 'assigned',
+      status: { $ne: 'completed' }, // 오늘 날짜이면서 완료된건 제외
     };
 
     const schedules = await ScheduleModel.find(query);

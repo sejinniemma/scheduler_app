@@ -10,12 +10,26 @@ import { useSession } from 'next-auth/react';
 import { formatScheduleDate, getToday } from '@/src/lib/utiles';
 import { useRouter } from 'next/navigation';
 import { useMutation, useQuery } from '@apollo/client/react';
-import { CREATE_ARRIVAL_REPORT } from '@/src/client/graphql/Report';
+import { UPDATE_ARRIVAL_REPORT, GET_REPORTS_BY_SCHEDULE } from '@/src/client/graphql/Report';
 import { GET_SCHEDULES } from '@/src/client/graphql/Schedule';
 import type { Schedule } from '@/src/types/schedule';
 
 interface GetSchedulesData {
   schedules: Schedule[];
+}
+
+interface GetReportsByScheduleData {
+  reportsBySchedule: Array<{
+    id: string;
+    scheduleId: string;
+    userId: string;
+    status: string;
+    estimatedTime?: string;
+    currentStep: number;
+    memo?: string;
+    createdAt: string;
+    updatedAt: string;
+  }>;
 }
 
 const ArrivalReportPage = () => {
@@ -25,7 +39,7 @@ const ArrivalReportPage = () => {
   const today = getToday();
 
   // 서버에서 오늘 날짜의 assigned이고 departure인 스케줄 중 가장 가까운 시간 하나만 가져오기
-  const { data, loading, refetch } = useQuery<GetSchedulesData>(GET_SCHEDULES, {
+  const { data, loading } = useQuery<GetSchedulesData>(GET_SCHEDULES, {
     variables: {
       date: today,
       subStatus: 'assigned',
@@ -37,15 +51,27 @@ const ArrivalReportPage = () => {
   // 서버에서 이미 정렬되어 있으므로 첫 번째 스케줄만 사용
   const targetSchedule = data?.schedules?.[0] || null;
 
-  // useMutation으로 도착 보고 처리
-  const [createArrivalReport, { loading: isSubmitting }] = useMutation(
-    CREATE_ARRIVAL_REPORT,
+  // 해당 스케줄의 Report 조회
+  const { data: reportData } = useQuery<GetReportsByScheduleData>(
+    GET_REPORTS_BY_SCHEDULE,
+    {
+      variables: {
+        scheduleId: targetSchedule?.id || '',
+      },
+      skip: !targetSchedule || !targetSchedule.id,
+      fetchPolicy: 'cache-and-network',
+    }
+  );
+
+  const existingReport = reportData?.reportsBySchedule?.[0] || null;
+
+  // useMutation으로 도착 보고 처리 (기존 Report 업데이트)
+  const [updateArrivalReport, { loading: isSubmitting }] = useMutation(
+    UPDATE_ARRIVAL_REPORT,
     {
       onCompleted: () => {
-        // 성공 시 스케줄 새로고침 후 완료 페이지로 이동
-        refetch().then(() => {
-          router.push('/report-success?status=arrival');
-        });
+        // 성공 시 완료 페이지로 이동 (스케줄 상태는 서버에서 이미 업데이트됨)
+        router.push('/report-success?status=arrival');
       },
       onError: (error) => {
         console.error('도착 보고 오류:', error);
@@ -74,10 +100,15 @@ const ArrivalReportPage = () => {
       return;
     }
 
+    if (!existingReport) {
+      alert('출발 보고를 먼저 완료해주세요.');
+      return;
+    }
+
     try {
-      await createArrivalReport({
+      await updateArrivalReport({
         variables: {
-          scheduleId: targetSchedule.id,
+          id: existingReport.id,
         },
       });
     } catch (error) {
@@ -131,7 +162,7 @@ const ArrivalReportPage = () => {
           text={isSubmitting ? '보고 중...' : '도착 보고하기'}
           mt='14px'
           onClick={handleArrivalReport}
-          disabled={loading || isSubmitting || scheduleData.length === 0}
+          disabled={loading || isSubmitting || scheduleData.length === 0 || !existingReport}
         />
       </ContentLayout>
     </MobileLayout>

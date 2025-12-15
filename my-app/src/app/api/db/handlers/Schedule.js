@@ -96,7 +96,7 @@ export const resolvers = {
       }
 
       const schedules = await Schedule.find(query);
-
+      console.log('schedules', schedules);
       // time 기준 정렬 (더 빠른 시간이 앞에)
       return schedules.sort((a, b) => a.time.localeCompare(b.time));
     },

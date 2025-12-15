@@ -8,9 +8,9 @@ export const typeDefs = gql`
   scalar DateTime
 
   type Report {
-    id: ID!
-    scheduleId: ID!
-    userId: ID!
+    id: String!
+    scheduleId: String!
+    userId: String!
     status: String!
     estimatedTime: String
     currentStep: Int!
@@ -22,14 +22,14 @@ export const typeDefs = gql`
 
   type Query {
     reports: [Report!]!
-    report(id: ID!): Report
-    reportsBySchedule(scheduleId: ID!): [Report!]!
-    reportsByUser(userId: ID!): [Report!]!
+    report(id: String!): Report
+    reportsBySchedule(scheduleId: String!): [Report!]!
+    reportsByUser(userId: String!): [Report!]!
   }
 
   type Mutation {
     createReport(
-      scheduleId: ID!
+      scheduleId: String!
       status: String!
       estimatedTime: String
       currentStep: Int
@@ -37,14 +37,14 @@ export const typeDefs = gql`
     ): Report!
 
     updateReport(
-      id: ID!
+      id: String!
       status: String
       estimatedTime: String
       currentStep: Int
       memo: String
     ): Report!
 
-    deleteReport(id: ID!): Boolean!
+    deleteReport(id: String!): Boolean!
   }
 `;
 
@@ -83,6 +83,10 @@ export const resolvers = {
       // 스케줄이 본인 것인지 확인
       const schedule = await Schedule.findOne({ id: scheduleId });
       if (!schedule) {
+        console.error('Schedule not found in reportsBySchedule:', {
+          scheduleId,
+          userId: context.user.id,
+        });
         throw new Error('스케줄을 찾을 수 없습니다.');
       }
       if (
@@ -170,6 +174,30 @@ export const resolvers = {
       if (estimatedTime !== undefined) report.estimatedTime = estimatedTime;
       if (currentStep !== undefined) report.currentStep = currentStep;
       if (memo !== undefined) report.memo = memo;
+
+      // 스케줄 상태도 업데이트
+      if (status) {
+        const schedule = await Schedule.findOne({ id: report.scheduleId });
+
+        if (!schedule) {
+          console.error('Schedule not found:', {
+            reportId: report.id,
+            scheduleId: report.scheduleId,
+            userId: context.user.id,
+          });
+          throw new Error('스케줄을 찾을 수 없습니다.');
+        }
+        // 본인이 mainUser 또는 subUser인지 확인
+        if (
+          schedule.mainUser !== context.user.id &&
+          schedule.subUser !== context.user.id
+        ) {
+          throw new Error('권한이 없습니다.');
+        }
+        schedule.status = status;
+        await schedule.save();
+      }
+
       return await report.save();
     },
 
