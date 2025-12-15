@@ -5,8 +5,8 @@ export const CREATE_ARRIVAL_REPORT = gql`
   mutation CreateArrivalReport($scheduleId: ID!) {
     createReport(scheduleId: $scheduleId, status: "arrival", currentStep: 3) {
       id
-      schedule
-      user
+      scheduleId
+      userId
       status
       currentStep
       createdAt
@@ -23,8 +23,8 @@ export const CREATE_WAKEUP_REPORT = gql`
       currentStep: 1
     ) {
       id
-      schedule
-      user
+      scheduleId
+      userId
       status
       currentStep
       estimatedTime
@@ -42,8 +42,8 @@ export const CREATE_DEPARTURE_REPORT = gql`
       currentStep: 2
     ) {
       id
-      schedule
-      user
+      scheduleId
+      userId
       status
       currentStep
       estimatedTime
@@ -61,8 +61,8 @@ export const CREATE_COMPLETED_REPORT = gql`
       memo: $memo
     ) {
       id
-      schedule
-      user
+      scheduleId
+      userId
       status
       currentStep
       memo
@@ -70,4 +70,5 @@ export const CREATE_COMPLETED_REPORT = gql`
     }
   }
 `;
+
 

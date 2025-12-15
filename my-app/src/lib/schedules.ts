@@ -43,8 +43,8 @@ export async function getAllAssignedSchedules(): Promise<Schedule[]> {
       sortedSchedules.map(async (schedule) => {
         // 해당 스케줄에 대한 Report 찾기
         const report = await ReportModel.findOne({
-          schedule: schedule._id,
-          user: user._id,
+          scheduleId: schedule.id,
+          userId: user.id,
         });
 
         return {
@@ -108,8 +108,8 @@ export async function getTodaySchedules(): Promise<Schedule[]> {
       sortedSchedules.map(async (schedule) => {
         // 해당 스케줄에 대한 Report 찾기
         const report = await ReportModel.findOne({
-          schedule: schedule._id,
-          user: user._id,
+          scheduleId: schedule.id,
+          userId: user.id,
         });
 
         return {
