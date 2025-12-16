@@ -11,6 +11,7 @@ export const typeDefs = gql`
     id: String!
     scheduleId: String!
     userId: String!
+    role: String!
     status: String!
     estimatedTime: String
     currentStep: Int!
@@ -136,19 +137,19 @@ export const resolvers = {
         throw new Error('권한이 없습니다.');
       }
 
+      // role 결정: mainUser면 'MAIN', subUser면 'SUB'
+      const role = schedule.mainUser === context.user.id ? 'MAIN' : 'SUB';
+
       // 보고 생성
       const report = new Report({
         scheduleId: schedule.id,
         userId: context.user.id,
+        role,
         status,
         estimatedTime,
         currentStep,
         memo,
       });
-
-      // 스케줄 상태 업데이트
-      schedule.status = status;
-      await schedule.save();
 
       return await report.save();
     },
@@ -175,27 +176,11 @@ export const resolvers = {
       if (currentStep !== undefined) report.currentStep = currentStep;
       if (memo !== undefined) report.memo = memo;
 
-      // 스케줄 상태도 업데이트
-      if (status) {
-        const schedule = await Schedule.findOne({ id: report.scheduleId });
-
-        if (!schedule) {
-          console.error('Schedule not found:', {
-            reportId: report.id,
-            scheduleId: report.scheduleId,
-            userId: context.user.id,
-          });
-          throw new Error('스케줄을 찾을 수 없습니다.');
-        }
-        // 본인이 mainUser 또는 subUser인지 확인
-        if (
-          schedule.mainUser !== context.user.id &&
-          schedule.subUser !== context.user.id
-        ) {
-          throw new Error('권한이 없습니다.');
-        }
-        schedule.status = status;
-        await schedule.save();
+      // role 업데이트: Schedule을 조회하여 role 확인
+      const schedule = await Schedule.findOne({ id: report.scheduleId });
+      if (schedule) {
+        const role = schedule.mainUser === context.user.id ? 'MAIN' : 'SUB';
+        report.role = role;
       }
 
       return await report.save();

@@ -20,7 +20,7 @@ export async function getAllAssignedSchedules(): Promise<Schedule[]> {
 
     const query = {
       $or: [{ mainUser: session.user.id }, { subUser: session.user.id }],
-      subStatus: { $in: ['assigned', 'completed'] },
+      status: { $in: ['assigned', 'completed'] },
     };
 
     const schedules = await ScheduleModel.find(query);
@@ -59,8 +59,8 @@ export async function getAllAssignedSchedules(): Promise<Schedule[]> {
           venue: schedule.venue,
           memo: schedule.memo,
           status: schedule.status,
-          subStatus: schedule.subStatus,
           currentStep: report?.currentStep ?? 0,
+          reportStatus: report?.status || null,
           createdAt: schedule.createdAt?.toISOString(),
           updatedAt: schedule.updatedAt?.toISOString(),
         };
@@ -87,8 +87,7 @@ export async function getTodaySchedules(): Promise<Schedule[]> {
     const query = {
       $or: [{ mainUser: session.user.id }, { subUser: session.user.id }],
       date: getToday(),
-      subStatus: 'assigned',
-      status: { $ne: 'completed' }, // 오늘 날짜이면서 완료된건 제외
+      status: 'assigned',
     };
 
     const schedules = await ScheduleModel.find(query);
@@ -125,8 +124,8 @@ export async function getTodaySchedules(): Promise<Schedule[]> {
           venue: schedule.venue,
           memo: schedule.memo,
           status: schedule.status,
-          subStatus: schedule.subStatus,
           currentStep: report?.currentStep ?? 0,
+          reportStatus: report?.status || null,
           createdAt: schedule.createdAt?.toISOString(),
           updatedAt: schedule.updatedAt?.toISOString(),
         };

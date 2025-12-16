@@ -2,8 +2,8 @@ import { gql } from '@apollo/client';
 
 // Schedule Queries
 export const GET_SCHEDULES = gql`
-  query GetSchedules($date: String, $subStatus: String, $status: String) {
-    schedules(date: $date, subStatus: $subStatus, status: $status) {
+  query GetSchedules($date: String, $status: String) {
+    schedules(date: $date, status: $status) {
       id
       mainUser
       subUser
@@ -13,10 +13,11 @@ export const GET_SCHEDULES = gql`
       location
       venue
       date
+      scheduledAt
       memo
       status
-      subStatus
       currentStep
+      reportStatus
       createdAt
       updatedAt
     }
@@ -26,7 +27,7 @@ export const GET_SCHEDULES = gql`
 // 오늘 스케줄 조회 쿼리
 export const GET_TODAY_SCHEDULES = gql`
   query GetTodaySchedules($date: String!) {
-    schedules(date: $date, subStatus: "assigned") {
+    schedules(date: $date, status: "assigned") {
       id
       mainUser
       subUser
@@ -36,10 +37,11 @@ export const GET_TODAY_SCHEDULES = gql`
       location
       venue
       date
+      scheduledAt
       memo
       status
-      subStatus
       currentStep
+      reportStatus
       createdAt
       updatedAt
     }
@@ -69,7 +71,6 @@ export const CREATE_SCHEDULE = gql`
       location
       memo
       status
-      currentStep
     }
   }
 `;
@@ -83,7 +84,6 @@ export const UPDATE_SCHEDULE = gql`
     $location: String
     $memo: String
     $status: String
-    $currentStep: Int
   ) {
     updateSchedule(
       id: $id
@@ -93,7 +93,6 @@ export const UPDATE_SCHEDULE = gql`
       location: $location
       memo: $memo
       status: $status
-      currentStep: $currentStep
     ) {
       id
       groom
@@ -102,7 +101,6 @@ export const UPDATE_SCHEDULE = gql`
       location
       memo
       status
-      currentStep
     }
   }
 `;

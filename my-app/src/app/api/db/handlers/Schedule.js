@@ -15,18 +15,19 @@ export const typeDefs = gql`
     bride: String!
     date: String!
     time: String!
+    scheduledAt: DateTime
     location: String
     venue: String
     memo: String
     status: String!
-    subStatus: String!
     currentStep: Int
+    reportStatus: String
     createdAt: DateTime!
     updatedAt: DateTime!
   }
 
   type Query {
-    schedules(date: String, subStatus: String, status: String): [Schedule!]!
+    schedules(date: String, status: String): [Schedule!]!
     schedule(id: ID!): Schedule
   }
 
@@ -42,7 +43,6 @@ export const typeDefs = gql`
       venue: String
       memo: String
       status: String
-      subStatus: String
     ): Schedule!
 
     updateSchedule(
@@ -57,7 +57,6 @@ export const typeDefs = gql`
       venue: String
       memo: String
       status: String
-      subStatus: String
     ): Schedule!
 
     confirmSchedules(scheduleIds: [String!]!): ConfirmSchedulesResult!
@@ -73,7 +72,7 @@ export const typeDefs = gql`
 
 export const resolvers = {
   Query: {
-    schedules: async (parent, { date, subStatus, status }, context) => {
+    schedules: async (parent, { date, status }, context) => {
       if (!context.user) {
         throw new Error('인증이 필요합니다.');
       }
@@ -88,25 +87,24 @@ export const resolvers = {
       if (date) {
         query.date = date;
       }
-      if (subStatus) {
-        query.subStatus = subStatus;
-      } else {
-        // subStatus가 없으면 assigned와 completed만 가져오기
-        query.subStatus = { $in: ['assigned', 'completed'] };
-      }
       if (status) {
         query.status = status;
-      } else if (date) {
-        // 오늘 날짜인 경우 완료되지 않은 것만 가져오기
-        query.status = { $ne: 'completed' };
+      } else {
+        // status가 없으면 assigned와 completed만 가져오기
+        query.status = { $in: ['assigned', 'completed'] };
       }
 
       const schedules = await Schedule.find(query);
-      console.log('schedules', schedules);
-      // time 기준 정렬 (더 빠른 시간이 앞에)
-      const sortedSchedules = schedules.sort((a, b) =>
-        a.time.localeCompare(b.time)
-      );
+
+      // scheduledAt 기준 정렬 (더 빠른 시간이 앞에)
+      const sortedSchedules = schedules.sort((a, b) => {
+        // scheduledAt이 있으면 그것을 사용, 없으면 date + time으로 Date 객체 생성하여 비교
+        const aScheduledAt =
+          a.scheduledAt || new Date(`${a.date}T${a.time}:00`);
+        const bScheduledAt =
+          b.scheduledAt || new Date(`${b.date}T${b.time}:00`);
+        return aScheduledAt.getTime() - bScheduledAt.getTime();
+      });
 
       // User 찾기 (Report 조회를 위해)
       const user = await User.findOne({ id: context.user.id });
@@ -114,11 +112,12 @@ export const resolvers = {
         return sortedSchedules.map((schedule) => ({
           ...schedule.toObject(),
           currentStep: 0,
+          reportStatus: null,
         }));
       }
 
-      // 각 스케줄에 대한 Report의 currentStep 가져오기
-      const schedulesWithCurrentStep = await Promise.all(
+      // 각 스케줄에 대한 Report의 currentStep과 status 가져오기
+      const schedulesWithReport = await Promise.all(
         sortedSchedules.map(async (schedule) => {
           const report = await Report.findOne({
             scheduleId: schedule.id,
@@ -128,11 +127,16 @@ export const resolvers = {
           return {
             ...schedule.toObject(),
             currentStep: report?.currentStep ?? 0,
+            // Report의 status를 사용 (없으면 null)
+            reportStatus: report?.status || null,
           };
         })
       );
 
-      return schedulesWithCurrentStep;
+      const withOutCompleted = schedulesWithReport.filter(
+        (schedule) => schedule.reportStatus !== 'completed'
+      );
+      return withOutCompleted;
     },
 
     schedule: async (parent, { id }, context) => {
@@ -151,7 +155,27 @@ export const resolvers = {
       ) {
         throw new Error('권한이 없습니다.');
       }
-      return schedule;
+
+      // 현재 사용자의 Report 정보 추가
+      const user = await User.findOne({ id: context.user.id });
+      if (user) {
+        const report = await Report.findOne({
+          scheduleId: schedule.id,
+          userId: user.id,
+        });
+
+        return {
+          ...schedule.toObject(),
+          currentStep: report?.currentStep ?? 0,
+          reportStatus: report?.status || null,
+        };
+      }
+
+      return {
+        ...schedule.toObject(),
+        currentStep: 0,
+        reportStatus: null,
+      };
     },
   },
 
@@ -168,8 +192,7 @@ export const resolvers = {
         location,
         venue,
         memo,
-        status = 'pending',
-        subStatus = 'unassigned',
+        status = 'unassigned',
       },
       context
     ) => {
@@ -188,7 +211,6 @@ export const resolvers = {
         venue,
         memo,
         status,
-        subStatus,
       });
       return await schedule.save();
     },
@@ -241,9 +263,9 @@ export const resolvers = {
           continue; // 권한이 없는 스케줄은 건너뛰기
         }
 
-        // subStatus가 'assigned'인 것만 업데이트
-        if (schedule.subStatus === 'assigned') {
-          schedule.subStatus = 'completed';
+        // status가 'assigned'인 것만 업데이트
+        if (schedule.status === 'assigned') {
+          schedule.status = 'completed';
           await schedule.save();
           updatedCount++;
         }

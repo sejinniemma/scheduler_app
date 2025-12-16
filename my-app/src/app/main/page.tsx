@@ -35,7 +35,8 @@ const MainPage = () => {
     id: schedule.id,
     time: schedule.time,
     location: schedule.venue || schedule.location || '',
-    status: schedule.status as
+    // Report의 status 사용 (없으면 'pending')
+    status: (schedule.reportStatus || 'pending') as
       | 'pending'
       | 'ongoing'
       | 'upcoming'
@@ -55,7 +56,8 @@ const MainPage = () => {
 
       // 가장 가까운 시간의 스케줄 (첫 번째 스케줄, 이미 시간 순으로 정렬됨)
       const nearestSchedule = schedules[0];
-      const scheduleStatus = nearestSchedule.status;
+      // Report의 status 사용 (없으면 'pending')
+      const scheduleStatus = nearestSchedule.reportStatus || 'pending';
 
       // 보고 순서에 따라 해당 단계 이상이면 disabled
       switch (reportType) {
@@ -93,7 +95,8 @@ const MainPage = () => {
       if (schedules.length === 0) return true;
 
       const nearestSchedule = schedules[0];
-      const scheduleStatus = nearestSchedule.status;
+      // Report의 status 사용 (없으면 'pending')
+      const scheduleStatus = nearestSchedule.reportStatus || 'pending';
 
       switch (reportType) {
         case 'departure':

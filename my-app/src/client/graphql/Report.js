@@ -7,6 +7,7 @@ export const CREATE_ARRIVAL_REPORT = gql`
       id
       scheduleId
       userId
+      role
       status
       currentStep
       createdAt
@@ -25,6 +26,7 @@ export const CREATE_WAKEUP_REPORT = gql`
       id
       scheduleId
       userId
+      role
       status
       currentStep
       estimatedTime
@@ -44,6 +46,7 @@ export const CREATE_DEPARTURE_REPORT = gql`
       id
       scheduleId
       userId
+      role
       status
       currentStep
       estimatedTime
@@ -63,6 +66,7 @@ export const CREATE_COMPLETED_REPORT = gql`
       id
       scheduleId
       userId
+      role
       status
       currentStep
       memo
@@ -78,6 +82,7 @@ export const GET_REPORTS_BY_SCHEDULE = gql`
       id
       scheduleId
       userId
+      role
       status
       estimatedTime
       currentStep
@@ -100,6 +105,7 @@ export const UPDATE_DEPARTURE_REPORT = gql`
       id
       scheduleId
       userId
+      role
       status
       estimatedTime
       currentStep
@@ -114,6 +120,7 @@ export const UPDATE_ARRIVAL_REPORT = gql`
       id
       scheduleId
       userId
+      role
       status
       currentStep
       updatedAt
@@ -127,6 +134,7 @@ export const UPDATE_COMPLETED_REPORT = gql`
       id
       scheduleId
       userId
+      role
       status
       currentStep
       memo

@@ -45,18 +45,24 @@ const DepartureReportPage = () => {
   const [selectedHour, setSelectedHour] = useState<number | null>(null);
   const [selectedMinute, setSelectedMinute] = useState<number | null>(null);
 
-  // 서버에서 오늘 날짜의 assigned이고 wakeup인 스케줄 중 가장 가까운 시간 하나만 가져오기
+  // 서버에서 오늘 날짜의 assigned인 스케줄 중 가장 가까운 시간 하나만 가져오기
   const { data, loading } = useQuery<GetSchedulesData>(GET_SCHEDULES, {
     variables: {
       date: today,
-      subStatus: 'assigned',
-      status: 'wakeup',
+      status: 'assigned',
     },
     fetchPolicy: 'cache-and-network',
   });
 
-  // 서버에서 이미 정렬되어 있으므로 첫 번째 스케줄만 사용
-  const targetSchedule = data?.schedules?.[0] || null;
+  // reportStatus가 'wakeup' 이상인 스케줄만 필터링 (기상 보고가 완료된 스케줄)
+  const targetSchedule =
+    data?.schedules?.find(
+      (schedule) =>
+        schedule.reportStatus === 'wakeup' ||
+        schedule.reportStatus === 'departure' ||
+        schedule.reportStatus === 'arrival' ||
+        schedule.reportStatus === 'completed'
+    ) || null;
 
   // 해당 스케줄의 Report 조회
   const { data: reportData } = useQuery<GetReportsByScheduleData>(

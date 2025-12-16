@@ -15,7 +15,7 @@ import type { Schedule } from '@/src/types/schedule';
 
 interface ScheduleWithStatus extends ScheduleInfoData {
   id: string;
-  subStatus: 'assigned' | 'completed';
+  status: 'assigned' | 'completed';
 }
 
 interface ScheduleGroup {
@@ -77,12 +77,12 @@ const ScheduleManagementPage = () => {
 
         // assigned 스케줄만 필터링
         const assignedSchedules = dateSchedules.filter(
-          (schedule) => schedule.subStatus === 'assigned'
+          (schedule) => schedule.status === 'assigned'
         );
 
         // completed 스케줄만 필터링
         const completedSchedules = dateSchedules.filter(
-          (schedule) => schedule.subStatus === 'completed'
+          (schedule) => schedule.status === 'completed'
         );
 
         // completed 스케줄이 있으면 파란색 그룹 먼저 추가 (확정된 것이 먼저 보이도록)
@@ -98,7 +98,7 @@ const ScheduleManagementPage = () => {
               location: schedule.location || '',
               venue: schedule.venue || '',
               memo: schedule.memo || '',
-              subStatus: schedule.subStatus as 'assigned' | 'completed',
+              status: schedule.status as 'assigned' | 'completed',
             })),
             scheduleIds: completedSchedules.map((schedule) => schedule.id),
             assignedScheduleIds: [],
@@ -118,7 +118,7 @@ const ScheduleManagementPage = () => {
               location: schedule.location || '',
               venue: schedule.venue || '',
               memo: schedule.memo || '',
-              subStatus: schedule.subStatus as 'assigned' | 'completed',
+              status: schedule.status as 'assigned' | 'completed',
             })),
             scheduleIds: assignedSchedules.map((schedule) => schedule.id),
             assignedScheduleIds: assignedSchedules.map(
@@ -193,7 +193,7 @@ const ScheduleManagementPage = () => {
                       className='flex flex-col gap-[10px]'
                     >
                       <ScheduleInfo schedule={schedule} />
-                      {schedule.subStatus === 'assigned' && (
+                      {schedule.status === 'assigned' && (
                         <Button
                           text={
                             confirmingScheduleIds.has(schedule.id)

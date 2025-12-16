@@ -17,6 +17,7 @@ interface ScheduleContextType {
   isLoading: boolean;
   error: string | null;
   refetch: () => Promise<unknown>;
+  refreshSchedules: () => Promise<unknown>;
 }
 
 const ScheduleContext = createContext<ScheduleContextType | undefined>(
@@ -60,6 +61,9 @@ export function ScheduleProvider({
     await refetchQuery({ variables: { date: getToday() } });
   }, [refetchQuery]);
 
+  // refreshSchedules는 refetch의 별칭
+  const refreshSchedules = refetch;
+
   return (
     <ScheduleContext.Provider
       value={{
@@ -67,6 +71,7 @@ export function ScheduleProvider({
         isLoading,
         error: errorMessage,
         refetch,
+        refreshSchedules,
       }}
     >
       {children}
