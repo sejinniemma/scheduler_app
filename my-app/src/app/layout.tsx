@@ -4,7 +4,7 @@ import './globals.css';
 import { ApolloClientProvider, client } from '../client/ApolloClientProvider';
 import SessionProviderWrapper from '../components/SessionProviderWrapper';
 import ScheduleProviderWrapper from '../components/ScheduleProviderWrapper';
-import { getTodaySchedules } from '../lib/schedules';
+import type { Schedule } from '../types/schedule';
 
 const pretendard = localFont({
   src: '../../public/fonts/PretendardVariable.woff2',
@@ -30,8 +30,8 @@ export default async function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  // 서버에서 오늘의 스케줄 데이터 가져오기
-  const schedules = await getTodaySchedules();
+  // 초기 데이터는 빈 배열로 설정하고, 클라이언트에서 useQuery로 가져옴
+  const schedules: Schedule[] = [];
 
   return (
     <html lang='en'>

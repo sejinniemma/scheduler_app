@@ -4,17 +4,19 @@ import {
   createContext,
   useContext,
   ReactNode,
-  useState,
   useCallback,
+  useMemo,
 } from 'react';
+import { useQuery } from '@apollo/client/react';
+import { GET_TODAY_SCHEDULES } from '@/src/client/graphql/Schedule';
+import { getToday } from '@/src/lib/utiles';
 import type { Schedule } from '@/src/types/schedule';
 
 interface ScheduleContextType {
   schedules: Schedule[];
   isLoading: boolean;
   error: string | null;
-  refreshSchedules: () => Promise<void>;
-  refetch: () => Promise<void>;
+  refetch: () => Promise<unknown>;
 }
 
 const ScheduleContext = createContext<ScheduleContextType | undefined>(
@@ -30,42 +32,40 @@ export function ScheduleProvider({
   children,
   initialSchedules,
 }: ScheduleProviderProps) {
-  const [schedules, setSchedules] = useState<Schedule[]>(initialSchedules);
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  // today를 useMemo로 메모이제이션하여 매 렌더링마다 새로 생성되지 않도록 함
+  const today = useMemo(() => getToday(), []);
 
-  const refreshSchedules = useCallback(async () => {
-    setIsLoading(true);
-    setError(null);
-    try {
-      const response = await fetch('/api/schedules/today');
-      if (!response.ok) {
-        throw new Error('스케줄을 가져오는데 실패했습니다.');
-      }
-      const data = await response.json();
-      setSchedules(data.schedules || []);
-    } catch (err) {
-      console.error('스케줄 새로고침 오류:', err);
-      setError(
-        err instanceof Error ? err.message : '알 수 없는 오류가 발생했습니다.'
-      );
-    } finally {
-      setIsLoading(false);
-    }
-  }, []);
+  const {
+    data,
+    loading,
+    error,
+    refetch: refetchQuery,
+  } = useQuery<{ schedules: Schedule[] }>(GET_TODAY_SCHEDULES, {
+    variables: { date: today },
+    // 캐시를 사용하되, 필요시 네트워크 요청
+    fetchPolicy: 'cache-and-network',
+  });
 
-  // refetch는 refreshSchedules의 별칭
+  // 에러 로깅
+  if (error) {
+    console.error('스케줄 가져오기 오류:', error);
+  }
+
+  const schedules: Schedule[] = data?.schedules || initialSchedules || [];
+  const isLoading = loading;
+  const errorMessage = error ? error.message : null;
+  console.log('schedules', schedules);
+  // refetch 함수를 useCallback으로 메모이제이션하여 매번 새로 생성되지 않도록 함
   const refetch = useCallback(async () => {
-    await refreshSchedules();
-  }, [refreshSchedules]);
+    await refetchQuery({ variables: { date: getToday() } });
+  }, [refetchQuery]);
 
   return (
     <ScheduleContext.Provider
       value={{
         schedules,
         isLoading,
-        error,
-        refreshSchedules,
+        error: errorMessage,
         refetch,
       }}
     >

@@ -16,6 +16,30 @@ export const GET_SCHEDULES = gql`
       memo
       status
       subStatus
+      currentStep
+      createdAt
+      updatedAt
+    }
+  }
+`;
+
+// 오늘 스케줄 조회 쿼리
+export const GET_TODAY_SCHEDULES = gql`
+  query GetTodaySchedules($date: String!) {
+    schedules(date: $date, subStatus: "assigned") {
+      id
+      mainUser
+      subUser
+      groom
+      bride
+      time
+      location
+      venue
+      date
+      memo
+      status
+      subStatus
+      currentStep
       createdAt
       updatedAt
     }
@@ -52,7 +76,7 @@ export const CREATE_SCHEDULE = gql`
 
 export const UPDATE_SCHEDULE = gql`
   mutation UpdateSchedule(
-    $id: ID!
+    $id: String!
     $groom: String
     $bride: String
     $date: String

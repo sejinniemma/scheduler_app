@@ -1,4 +1,6 @@
 import Schedule from '../models/Schedule';
+import Report from '../models/Report';
+import User from '../models/User';
 import { connectToDatabase } from '../mongodb';
 import { gql } from '@apollo/client';
 
@@ -6,9 +8,9 @@ export const typeDefs = gql`
   scalar DateTime
 
   type Schedule {
-    id: ID!
-    mainUser: ID!
-    subUser: ID!
+    id: String!
+    mainUser: String!
+    subUser: String
     groom: String!
     bride: String!
     date: String!
@@ -18,6 +20,7 @@ export const typeDefs = gql`
     memo: String
     status: String!
     subStatus: String!
+    currentStep: Int
     createdAt: DateTime!
     updatedAt: DateTime!
   }
@@ -29,8 +32,8 @@ export const typeDefs = gql`
 
   type Mutation {
     createSchedule(
-      mainUser: ID!
-      subUser: ID!
+      mainUser: String!
+      subUser: String
       groom: String!
       bride: String!
       date: String!
@@ -43,8 +46,8 @@ export const typeDefs = gql`
     ): Schedule!
 
     updateSchedule(
-      id: ID!
-      mainUser: ID
+      id: String!
+      mainUser: String
       subUser: ID
       groom: String
       bride: String
@@ -57,9 +60,9 @@ export const typeDefs = gql`
       subStatus: String
     ): Schedule!
 
-    confirmSchedules(scheduleIds: [ID!]!): ConfirmSchedulesResult!
+    confirmSchedules(scheduleIds: [String!]!): ConfirmSchedulesResult!
 
-    deleteSchedule(id: ID!): Boolean!
+    deleteSchedule(id: String!): Boolean!
   }
 
   type ConfirmSchedulesResult {
@@ -93,12 +96,43 @@ export const resolvers = {
       }
       if (status) {
         query.status = status;
+      } else if (date) {
+        // 오늘 날짜인 경우 완료되지 않은 것만 가져오기
+        query.status = { $ne: 'completed' };
       }
 
       const schedules = await Schedule.find(query);
       console.log('schedules', schedules);
       // time 기준 정렬 (더 빠른 시간이 앞에)
-      return schedules.sort((a, b) => a.time.localeCompare(b.time));
+      const sortedSchedules = schedules.sort((a, b) =>
+        a.time.localeCompare(b.time)
+      );
+
+      // User 찾기 (Report 조회를 위해)
+      const user = await User.findOne({ id: context.user.id });
+      if (!user) {
+        return sortedSchedules.map((schedule) => ({
+          ...schedule.toObject(),
+          currentStep: 0,
+        }));
+      }
+
+      // 각 스케줄에 대한 Report의 currentStep 가져오기
+      const schedulesWithCurrentStep = await Promise.all(
+        sortedSchedules.map(async (schedule) => {
+          const report = await Report.findOne({
+            scheduleId: schedule.id,
+            userId: user.id,
+          });
+
+          return {
+            ...schedule.toObject(),
+            currentStep: report?.currentStep ?? 0,
+          };
+        })
+      );
+
+      return schedulesWithCurrentStep;
     },
 
     schedule: async (parent, { id }, context) => {

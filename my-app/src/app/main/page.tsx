@@ -17,9 +17,6 @@ const MainPage = () => {
 
   // 페이지가 보일 때 스케줄 새로고침 (다른 페이지에서 돌아올 때)
   useEffect(() => {
-    // 컴포넌트 마운트 시 한 번 실행
-    refetch();
-
     // 페이지가 보일 때마다 실행 (visibilitychange 이벤트)
     const handleVisibilityChange = () => {
       if (document.visibilityState === 'visible') {
@@ -31,7 +28,8 @@ const MainPage = () => {
     return () => {
       document.removeEventListener('visibilitychange', handleVisibilityChange);
     };
-  }, [refetch]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []); // refetch를 의존성에서 제거하여 무한 루프 방지
   // Context에서 가져온 스케줄 데이터 변환
   const transformedSchedules = schedules.map((schedule) => ({
     id: schedule.id,
