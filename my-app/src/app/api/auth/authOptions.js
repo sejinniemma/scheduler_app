@@ -21,7 +21,7 @@ export const authOptions = {
             credentials.phone,
             credentials.name
           );
-          console.log(`result: ${result}`);
+
           if (!result.success) {
             throw new Error(result.error);
           }
