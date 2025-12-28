@@ -3,6 +3,7 @@ import Report from '../models/Report';
 import User from '../models/User';
 import { connectToDatabase } from '../mongodb';
 import { gql } from '@apollo/client';
+import { getToday } from '@/src/lib/utiles';
 
 export const typeDefs = gql`
   scalar DateTime
@@ -27,7 +28,7 @@ export const typeDefs = gql`
   }
 
   type Query {
-    schedules(date: String, status: String): [Schedule!]!
+    getTodaySchedules: [Schedule!]!
     schedule(id: ID!): Schedule
   }
 
@@ -72,38 +73,28 @@ export const typeDefs = gql`
 
 export const resolvers = {
   Query: {
-    schedules: async (parent, { date, status }, context) => {
+    getTodaySchedules: async (parent, args, context) => {
       if (!context.user) {
         throw new Error('인증이 필요합니다.');
       }
       await connectToDatabase();
 
+      // 오늘 날짜 가져오기
+      const today = getToday();
+
       // 기본 쿼리: 로그인한 사용자가 mainUser 또는 subUser인 스케줄만 조회
+      // 오늘 날짜이고 확정된 스케줄만 조회
       const query = {
         $or: [{ mainUser: context.user.id }, { subUser: context.user.id }],
+        date: today,
+        status: 'confirmed',
       };
-
-      // 필터 추가
-      if (date) {
-        query.date = date;
-      }
-      if (status) {
-        query.status = status;
-      } else {
-        // status가 없으면 assigned와 completed만 가져오기
-        query.status = { $in: ['assigned', 'completed'] };
-      }
 
       const schedules = await Schedule.find(query);
 
       // scheduledAt 기준 정렬 (더 빠른 시간이 앞에)
       const sortedSchedules = schedules.sort((a, b) => {
-        // scheduledAt이 있으면 그것을 사용, 없으면 date + time으로 Date 객체 생성하여 비교
-        const aScheduledAt =
-          a.scheduledAt || new Date(`${a.date}T${a.time}:00`);
-        const bScheduledAt =
-          b.scheduledAt || new Date(`${b.date}T${b.time}:00`);
-        return aScheduledAt.getTime() - bScheduledAt.getTime();
+        return a.date - b.date;
       });
 
       // User 찾기 (Report 조회를 위해)
@@ -132,7 +123,7 @@ export const resolvers = {
           };
         })
       );
-
+      console.log('schedulesWithReport', schedulesWithReport);
       const withOutCompleted = schedulesWithReport.filter(
         (schedule) => schedule.reportStatus !== 'completed'
       );
@@ -265,7 +256,7 @@ export const resolvers = {
 
         // status가 'assigned'인 것만 업데이트
         if (schedule.status === 'assigned') {
-          schedule.status = 'completed';
+          schedule.status = 'confirmed';
           await schedule.save();
           updatedCount++;
         }

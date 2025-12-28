@@ -8,7 +8,7 @@ import ScheduleInfo, { ScheduleInfoData } from '@/src/components/ScheduleInfo';
 import TimePickerWheel from '@/src/components/TimePickerWheel';
 import MobileLayout from '@/src/layout/MobileLayout';
 import { useSession } from 'next-auth/react';
-import { formatScheduleDate, getToday } from '@/src/lib/utiles';
+import { formatScheduleDate } from '@/src/lib/utiles';
 import { useState, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import { useMutation, useQuery } from '@apollo/client/react';
@@ -41,16 +41,11 @@ const DepartureReportPage = () => {
   const { data: session } = useSession();
   const userName = session?.user?.name || '';
   const router = useRouter();
-  const today = getToday();
   const [selectedHour, setSelectedHour] = useState<number | null>(null);
   const [selectedMinute, setSelectedMinute] = useState<number | null>(null);
 
-  // 서버에서 오늘 날짜의 assigned인 스케줄 중 가장 가까운 시간 하나만 가져오기
+  // 서버에서 오늘 날짜의 confirmed인 스케줄 중 가장 가까운 시간 하나만 가져오기
   const { data, loading } = useQuery<GetSchedulesData>(GET_SCHEDULES, {
-    variables: {
-      date: today,
-      status: 'assigned',
-    },
     fetchPolicy: 'cache-and-network',
   });
 

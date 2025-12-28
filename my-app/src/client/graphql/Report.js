@@ -94,6 +94,26 @@ export const GET_REPORTS_BY_SCHEDULE = gql`
 `;
 
 // Report Mutations for Updates
+export const UPDATE_WAKEUP_REPORT = gql`
+  mutation UpdateWakeupReport($id: String!, $estimatedTime: String) {
+    updateReport(
+      id: $id
+      status: "wakeup"
+      estimatedTime: $estimatedTime
+      currentStep: 1
+    ) {
+      id
+      scheduleId
+      userId
+      role
+      status
+      estimatedTime
+      currentStep
+      updatedAt
+    }
+  }
+`;
+
 export const UPDATE_DEPARTURE_REPORT = gql`
   mutation UpdateDepartureReport($id: String!, $estimatedTime: String) {
     updateReport(

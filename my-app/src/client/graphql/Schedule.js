@@ -2,8 +2,8 @@ import { gql } from '@apollo/client';
 
 // Schedule Queries
 export const GET_SCHEDULES = gql`
-  query GetSchedules($date: String, $status: String) {
-    schedules(date: $date, status: $status) {
+  query GetSchedules {
+    getTodaySchedules {
       id
       mainUser
       subUser
@@ -24,10 +24,10 @@ export const GET_SCHEDULES = gql`
   }
 `;
 
-// 오늘 스케줄 조회 쿼리
+// 오늘 스케줄 조회 쿼리 (GET_SCHEDULES와 동일하므로 별도로 유지하지 않아도 되지만, 호환성을 위해 유지)
 export const GET_TODAY_SCHEDULES = gql`
-  query GetTodaySchedules($date: String!) {
-    schedules(date: $date, status: "assigned") {
+  query GetTodaySchedules {
+    getTodaySchedules {
       id
       mainUser
       subUser

@@ -29,7 +29,7 @@ const ScheduleSchema = new mongoose.Schema(
     memo: { type: String },
     status: {
       type: String,
-      enum: ['unassigned', 'assigned', 'completed'],
+      enum: ['unassigned', 'assigned', 'confirmed'],
       default: 'unassigned',
     },
   },

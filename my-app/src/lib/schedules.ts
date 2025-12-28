@@ -20,7 +20,7 @@ export async function getAllAssignedSchedules(): Promise<Schedule[]> {
 
     const query = {
       $or: [{ mainUser: session.user.id }, { subUser: session.user.id }],
-      status: { $in: ['assigned', 'completed'] },
+      status: { $in: ['assigned', 'confirmed'] },
     };
 
     const schedules = await ScheduleModel.find(query);
@@ -87,7 +87,7 @@ export async function getTodaySchedules(): Promise<Schedule[]> {
     const query = {
       $or: [{ mainUser: session.user.id }, { subUser: session.user.id }],
       date: getToday(),
-      status: 'assigned',
+      status: 'confirmed',
     };
 
     const schedules = await ScheduleModel.find(query);

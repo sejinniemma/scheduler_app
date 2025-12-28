@@ -15,7 +15,7 @@ import type { Schedule } from '@/src/types/schedule';
 
 interface ScheduleWithStatus extends ScheduleInfoData {
   id: string;
-  status: 'assigned' | 'completed';
+  status: 'assigned' | 'confirmed';
 }
 
 interface ScheduleGroup {
@@ -80,17 +80,17 @@ const ScheduleManagementPage = () => {
           (schedule) => schedule.status === 'assigned'
         );
 
-        // completed 스케줄만 필터링
-        const completedSchedules = dateSchedules.filter(
-          (schedule) => schedule.status === 'completed'
+        // confirmed 스케줄만 필터링
+        const confirmedSchedules = dateSchedules.filter(
+          (schedule) => schedule.status === 'confirmed'
         );
 
-        // completed 스케줄이 있으면 파란색 그룹 먼저 추가 (확정된 것이 먼저 보이도록)
-        if (completedSchedules.length > 0) {
+        // confirmed 스케줄이 있으면 파란색 그룹 먼저 추가 (확정된 것이 먼저 보이도록)
+        if (confirmedSchedules.length > 0) {
           result.push({
             date: formatDateForGroup(date),
             dateColor: 'blue',
-            schedules: completedSchedules.map((schedule) => ({
+            schedules: confirmedSchedules.map((schedule) => ({
               id: schedule.id,
               groom: schedule.groom || '',
               bride: schedule.bride || '',
@@ -98,9 +98,9 @@ const ScheduleManagementPage = () => {
               location: schedule.location || '',
               venue: schedule.venue || '',
               memo: schedule.memo || '',
-              status: schedule.status as 'assigned' | 'completed',
+              status: schedule.status as 'assigned' | 'confirmed',
             })),
-            scheduleIds: completedSchedules.map((schedule) => schedule.id),
+            scheduleIds: confirmedSchedules.map((schedule) => schedule.id),
             assignedScheduleIds: [],
           });
         }
@@ -118,7 +118,7 @@ const ScheduleManagementPage = () => {
               location: schedule.location || '',
               venue: schedule.venue || '',
               memo: schedule.memo || '',
-              status: schedule.status as 'assigned' | 'completed',
+              status: schedule.status as 'assigned' | 'confirmed',
             })),
             scheduleIds: assignedSchedules.map((schedule) => schedule.id),
             assignedScheduleIds: assignedSchedules.map(

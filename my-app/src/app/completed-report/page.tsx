@@ -7,7 +7,7 @@ import ScheduleInfo, { ScheduleInfoData } from '@/src/components/ScheduleInfo';
 import MobileLayout from '@/src/layout/MobileLayout';
 import CheckboxList, { CheckboxItemData } from '@/src/components/CheckboxList';
 import { useSession } from 'next-auth/react';
-import { formatScheduleDate, getToday } from '@/src/lib/utiles';
+import { formatScheduleDate } from '@/src/lib/utiles';
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useMutation, useQuery } from '@apollo/client/react';
@@ -37,14 +37,9 @@ const CompletedReportPage = () => {
   const { data: session } = useSession();
   const userName = session?.user?.name || '';
   const router = useRouter();
-  const today = getToday();
 
-  // 서버에서 오늘 날짜의 assigned인 스케줄 중 가장 가까운 시간 하나만 가져오기
+  // 서버에서 오늘 날짜의 confirmed인 스케줄 중 가장 가까운 시간 하나만 가져오기
   const { data, loading } = useQuery<GetSchedulesData>(GET_SCHEDULES, {
-    variables: {
-      date: today,
-      status: 'assigned',
-    },
     fetchPolicy: 'cache-and-network',
   });
 
