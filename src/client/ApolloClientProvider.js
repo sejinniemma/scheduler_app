@@ -6,6 +6,7 @@ import { ApolloProvider } from '@apollo/client/react';
 const client = new ApolloClient({
   link: new HttpLink({
     uri: '/api/graphql', // GraphQL 엔드포인트
+    credentials: 'include', // ✅ NextAuth 세션 쿠키 전달
   }),
   cache: new InMemoryCache(),
 });
