@@ -10,12 +10,16 @@ import { useSession } from 'next-auth/react';
 import { formatScheduleDate } from '@/src/lib/utiles';
 import { useRouter } from 'next/navigation';
 import { useMutation, useQuery } from '@apollo/client/react';
-import { UPDATE_ARRIVAL_REPORT, GET_REPORTS_BY_SCHEDULE } from '@/src/client/graphql/Report';
+import {
+  UPDATE_ARRIVAL_REPORT,
+  GET_REPORTS_BY_SCHEDULE,
+} from '@/src/client/graphql/Report';
 import { GET_SCHEDULES } from '@/src/client/graphql/Schedule';
 import type { Schedule } from '@/src/types/schedule';
+import { useState, useRef } from 'react';
 
 interface GetSchedulesData {
-  schedules: Schedule[];
+  getTodaySchedules: Schedule[];
 }
 
 interface GetReportsByScheduleData {
@@ -36,6 +40,9 @@ const ArrivalReportPage = () => {
   const { data: session } = useSession();
   const userName = session?.user?.name || '';
   const router = useRouter();
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [uploadedImageUrl, setUploadedImageUrl] = useState<string | null>(null);
+  const [isUploading, setIsUploading] = useState(false);
 
   // 서버에서 오늘 날짜의 confirmed인 스케줄 중 가장 가까운 시간 하나만 가져오기
   const { data, loading } = useQuery<GetSchedulesData>(GET_SCHEDULES, {
@@ -44,7 +51,7 @@ const ArrivalReportPage = () => {
 
   // reportStatus가 'departure' 이상인 스케줄만 필터링 (출발 보고가 완료된 스케줄)
   const targetSchedule =
-    data?.schedules?.find(
+    data?.getTodaySchedules?.find(
       (schedule) =>
         schedule.reportStatus === 'departure' ||
         schedule.reportStatus === 'arrival' ||
@@ -94,6 +101,52 @@ const ArrivalReportPage = () => {
       ]
     : [];
 
+  const handleFileSelect = async (
+    event: React.ChangeEvent<HTMLInputElement>
+  ) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    // 이미지 파일인지 확인
+    if (!file.type.startsWith('image/')) {
+      alert('이미지 파일만 업로드 가능합니다.');
+      return;
+    }
+
+    setIsUploading(true);
+    try {
+      const formData = new FormData();
+      formData.append('file', file);
+
+      const response = await fetch('/api/upload', {
+        method: 'POST',
+        body: formData,
+      });
+
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error || '이미지 업로드 실패');
+      }
+
+      const data = await response.json();
+      setUploadedImageUrl(data.imageUrl);
+      alert('이미지가 성공적으로 업로드되었습니다.');
+    } catch (error) {
+      console.error('이미지 업로드 오류:', error);
+      alert(
+        error instanceof Error
+          ? error.message
+          : '이미지 업로드 중 오류가 발생했습니다.'
+      );
+    } finally {
+      setIsUploading(false);
+    }
+  };
+
+  const handleUploadClick = () => {
+    fileInputRef.current?.click();
+  };
+
   const handleArrivalReport = async () => {
     if (!targetSchedule) {
       alert('보고할 스케줄이 없습니다.');
@@ -109,6 +162,7 @@ const ArrivalReportPage = () => {
       await updateArrivalReport({
         variables: {
           id: existingReport.id,
+          imageUrl: uploadedImageUrl || undefined,
         },
       });
     } catch (error) {
@@ -145,9 +199,24 @@ const ArrivalReportPage = () => {
           )}
         </div>
 
+        <input
+          type='file'
+          ref={fileInputRef}
+          onChange={handleFileSelect}
+          accept='image/*'
+          className='hidden'
+        />
         <Button
-          text='사진 업로드'
+          text={
+            isUploading
+              ? '업로드 중...'
+              : uploadedImageUrl
+              ? '사진 변경'
+              : '사진 업로드'
+          }
           showShadow={false}
+          onClick={handleUploadClick}
+          disabled={isUploading}
           leftIcon={
             <Image
               src='/images/icons/upload.png'
@@ -158,11 +227,28 @@ const ArrivalReportPage = () => {
           }
           className='border border-line-medium rounded-[10px] !text-normal-strong bg-transparent'
         />
+        {uploadedImageUrl && (
+          <div className='mt-[10px] w-full'>
+            <Image
+              src={uploadedImageUrl}
+              alt='Uploaded image'
+              width={400}
+              height={300}
+              className='w-full h-auto rounded-[10px] object-cover'
+              unoptimized
+            />
+          </div>
+        )}
         <Button
           text={isSubmitting ? '보고 중...' : '도착 보고하기'}
           mt='14px'
           onClick={handleArrivalReport}
-          disabled={loading || isSubmitting || scheduleData.length === 0 || !existingReport}
+          disabled={
+            loading ||
+            isSubmitting ||
+            scheduleData.length === 0 ||
+            !existingReport
+          }
         />
       </ContentLayout>
     </MobileLayout>

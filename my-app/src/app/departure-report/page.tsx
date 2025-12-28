@@ -20,7 +20,7 @@ import { GET_SCHEDULES } from '@/src/client/graphql/Schedule';
 import type { Schedule } from '@/src/types/schedule';
 
 interface GetSchedulesData {
-  schedules: Schedule[];
+  getTodaySchedules: Schedule[];
 }
 
 interface GetReportsByScheduleData {
@@ -51,7 +51,7 @@ const DepartureReportPage = () => {
 
   // reportStatus가 'wakeup' 이상인 스케줄만 필터링 (기상 보고가 완료된 스케줄)
   const targetSchedule =
-    data?.schedules?.find(
+    data?.getTodaySchedules?.find(
       (schedule) =>
         schedule.reportStatus === 'wakeup' ||
         schedule.reportStatus === 'departure' ||

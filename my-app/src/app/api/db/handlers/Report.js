@@ -16,6 +16,7 @@ export const typeDefs = gql`
     estimatedTime: String
     currentStep: Int!
     memo: String
+    imageUrl: String
     reportedAt: DateTime!
     createdAt: DateTime!
     updatedAt: DateTime!
@@ -43,6 +44,7 @@ export const typeDefs = gql`
       estimatedTime: String
       currentStep: Int
       memo: String
+      imageUrl: String
     ): Report!
 
     deleteReport(id: String!): Boolean!
@@ -156,7 +158,7 @@ export const resolvers = {
 
     updateReport: async (
       parent,
-      { id, status, estimatedTime, currentStep, memo },
+      { id, status, estimatedTime, currentStep, memo, imageUrl },
       context
     ) => {
       if (!context.user) {
@@ -175,6 +177,7 @@ export const resolvers = {
       if (estimatedTime !== undefined) report.estimatedTime = estimatedTime;
       if (currentStep !== undefined) report.currentStep = currentStep;
       if (memo !== undefined) report.memo = memo;
+      if (imageUrl !== undefined) report.imageUrl = imageUrl;
 
       // role 업데이트: Schedule을 조회하여 role 확인
       const schedule = await Schedule.findOne({ id: report.scheduleId });

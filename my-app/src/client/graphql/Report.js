@@ -135,14 +135,20 @@ export const UPDATE_DEPARTURE_REPORT = gql`
 `;
 
 export const UPDATE_ARRIVAL_REPORT = gql`
-  mutation UpdateArrivalReport($id: String!) {
-    updateReport(id: $id, status: "arrival", currentStep: 3) {
+  mutation UpdateArrivalReport($id: String!, $imageUrl: String) {
+    updateReport(
+      id: $id
+      status: "arrival"
+      currentStep: 3
+      imageUrl: $imageUrl
+    ) {
       id
       scheduleId
       userId
       role
       status
       currentStep
+      imageUrl
       updatedAt
     }
   }

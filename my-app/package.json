@@ -12,6 +12,7 @@
     "@apollo/client": "^4.0.9",
     "@apollo/server": "^5.2.0",
     "@as-integrations/next": "^4.1.0",
+    "cloudinary": "^2.8.0",
     "graphql": "^16.12.0",
     "graphql-scalars": "^1.25.0",
     "graphql-tag": "^2.12.6",

@@ -11,12 +11,15 @@ import { formatScheduleDate } from '@/src/lib/utiles';
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useMutation, useQuery } from '@apollo/client/react';
-import { UPDATE_COMPLETED_REPORT, GET_REPORTS_BY_SCHEDULE } from '@/src/client/graphql/Report';
+import {
+  UPDATE_COMPLETED_REPORT,
+  GET_REPORTS_BY_SCHEDULE,
+} from '@/src/client/graphql/Report';
 import { GET_SCHEDULES } from '@/src/client/graphql/Schedule';
 import type { Schedule } from '@/src/types/schedule';
 
 interface GetSchedulesData {
-  schedules: Schedule[];
+  getTodaySchedules: Schedule[];
 }
 
 interface GetReportsByScheduleData {
@@ -45,7 +48,7 @@ const CompletedReportPage = () => {
 
   // reportStatus가 'arrival' 이상인 스케줄만 필터링 (도착 보고가 완료된 스케줄)
   const targetSchedule =
-    data?.schedules?.find(
+    data?.getTodaySchedules?.find(
       (schedule) =>
         schedule.reportStatus === 'arrival' ||
         schedule.reportStatus === 'completed'
@@ -191,7 +194,12 @@ const CompletedReportPage = () => {
         <Button
           text={isSubmitting ? '보고 중...' : '촬영 종료 보고하기'}
           onClick={handleCompletedReport}
-          disabled={loading || isSubmitting || scheduleData.length === 0 || !existingReport}
+          disabled={
+            loading ||
+            isSubmitting ||
+            scheduleData.length === 0 ||
+            !existingReport
+          }
         />
       </ContentLayout>
     </MobileLayout>

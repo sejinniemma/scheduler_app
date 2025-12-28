@@ -45,6 +45,7 @@ const ReportSchema = new mongoose.Schema(
       default: 0,
     },
     memo: { type: String },
+    imageUrl: { type: String }, // Cloudinary 이미지 URL
     reportedAt: {
       type: Date,
       default: Date.now,
