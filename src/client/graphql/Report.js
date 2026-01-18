@@ -158,6 +158,21 @@ export const UPDATE_ARRIVAL_REPORT = gql`
   }
 `;
 
+export const UPDATE_REPORT_IMAGE = gql`
+  mutation UpdateReportImage($id: String!, $imageUrl: String!) {
+    updateReport(id: $id, imageUrl: $imageUrl) {
+      id
+      scheduleId
+      userId
+      role
+      status
+      currentStep
+      imageUrl
+      updatedAt
+    }
+  }
+`;
+
 export const UPDATE_COMPLETED_REPORT = gql`
   mutation UpdateCompletedReport($id: String!, $memo: String) {
     updateReport(id: $id, status: "completed", currentStep: 3, memo: $memo) {

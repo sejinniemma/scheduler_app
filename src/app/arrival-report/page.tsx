@@ -13,6 +13,7 @@ import { useMutation, useQuery } from '@apollo/client/react';
 import {
   UPDATE_ARRIVAL_REPORT,
   GET_REPORTS_BY_SCHEDULE,
+  UPDATE_REPORT_IMAGE,
 } from '@/src/client/graphql/Report';
 import { GET_SCHEDULES } from '@/src/client/graphql/Schedule';
 import type { Schedule } from '@/src/types/schedule';
@@ -87,6 +88,9 @@ const ArrivalReportPage = () => {
     }
   );
 
+  // 업로드된 이미지를 미리 Report에 반영 (상태 변경 없이 imageUrl만 업데이트)
+  const [updateReportImage] = useMutation(UPDATE_REPORT_IMAGE);
+
   // 스케줄 데이터를 ScheduleInfoData 형식으로 변환
   const scheduleData: ScheduleInfoData[] = targetSchedule
     ? [
@@ -130,6 +134,14 @@ const ArrivalReportPage = () => {
 
       const data = await response.json();
       setUploadedImageUrl(data.imageUrl);
+      // 이미지 업로드 직후 Report에 이미지 URL 저장 (출발 보고가 완료된 경우만)
+      if (existingReport?.id) {
+        updateReportImage({
+          variables: { id: existingReport.id, imageUrl: data.imageUrl },
+        }).catch((err) => {
+          console.error('이미지 URL 저장 오류:', err);
+        });
+      }
       alert('이미지가 성공적으로 업로드되었습니다.');
     } catch (error) {
       console.error('이미지 업로드 오류:', error);
@@ -236,7 +248,7 @@ const ArrivalReportPage = () => {
               height={21}
             />
           }
-          className='border border-line-medium rounded-[10px] !text-normal-strong bg-transparent'
+          className='border border-line-medium rounded-[10px] text-normal-strong! bg-transparent'
         />
         {uploadedImageUrl && (
           <div className='mt-[10px] w-full'>
