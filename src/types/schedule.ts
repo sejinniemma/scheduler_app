@@ -5,6 +5,7 @@ export interface Schedule {
   groom: string;
   bride: string;
   time: string;
+  userArrivalTime?: string; // 작가 도착 시간 (예: "10:30")
   location?: string;
   venue?: string;
   date: string;

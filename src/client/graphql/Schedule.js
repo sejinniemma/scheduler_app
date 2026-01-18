@@ -10,6 +10,7 @@ export const GET_SCHEDULES = gql`
       groom
       bride
       time
+      userArrivalTime
       location
       venue
       date
@@ -34,6 +35,7 @@ export const GET_TODAY_SCHEDULES = gql`
       groom
       bride
       time
+      userArrivalTime
       location
       venue
       date
@@ -54,6 +56,7 @@ export const CREATE_SCHEDULE = gql`
     $groom: String!
     $bride: String!
     $date: String!
+    $userArrivalTime: String
     $location: String
     $memo: String
   ) {
@@ -61,6 +64,7 @@ export const CREATE_SCHEDULE = gql`
       groom: $groom
       bride: $bride
       date: $date
+      userArrivalTime: $userArrivalTime
       location: $location
       memo: $memo
     ) {
@@ -68,6 +72,7 @@ export const CREATE_SCHEDULE = gql`
       groom
       bride
       date
+      userArrivalTime
       location
       memo
       status
@@ -82,6 +87,7 @@ export const UPDATE_SCHEDULE = gql`
     $bride: String
     $date: String
     $location: String
+    $userArrivalTime: String
     $memo: String
     $status: String
   ) {
@@ -90,6 +96,7 @@ export const UPDATE_SCHEDULE = gql`
       groom: $groom
       bride: $bride
       date: $date
+      userArrivalTime: $userArrivalTime
       location: $location
       memo: $memo
       status: $status
@@ -98,6 +105,7 @@ export const UPDATE_SCHEDULE = gql`
       groom
       bride
       date
+      userArrivalTime
       location
       memo
       status
