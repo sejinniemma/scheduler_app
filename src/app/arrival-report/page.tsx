@@ -159,9 +159,20 @@ const ArrivalReportPage = () => {
     }
 
     try {
+      // 도착 예정 시간(기대 도착)과 현재 시간을 비교하여 지연 여부 판단
+      const arrivalTargetTime =
+        targetSchedule.userArrivalTime || targetSchedule.time;
+      const arrivalTarget = arrivalTargetTime
+        ? new Date(`${targetSchedule.date}T${arrivalTargetTime}:00`)
+        : null;
+      const now = new Date();
+      const status =
+        arrivalTarget && now > arrivalTarget ? 'delayed' : 'arrival';
+
       await updateArrivalReport({
         variables: {
           id: existingReport.id,
+          status,
           imageUrl: uploadedImageUrl || undefined,
         },
       });

@@ -15,7 +15,8 @@ interface Schedule {
     | 'canceled'
     | 'wakeup'
     | 'departure'
-    | 'arrival';
+    | 'arrival'
+    | 'delayed';
   currentStep: 0 | 1 | 2 | 3;
 }
 
@@ -31,6 +32,7 @@ const getCurrentStepFromStatus = (status: string): 0 | 1 | 2 | 3 => {
     case 'departure':
       return 1; // 30%
     case 'arrival':
+    case 'delayed':
       return 2; // 75%
     case 'completed':
       return 3; // 100%

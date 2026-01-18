@@ -44,7 +44,8 @@ const MainPage = () => {
       | 'canceled'
       | 'wakeup'
       | 'departure'
-      | 'arrival',
+      | 'arrival'
+      | 'delayed',
     currentStep: (schedule.currentStep ?? 0) as 0 | 1 | 2 | 3,
   }));
 
@@ -67,6 +68,7 @@ const MainPage = () => {
             scheduleStatus === 'wakeup' ||
             scheduleStatus === 'departure' ||
             scheduleStatus === 'arrival' ||
+            scheduleStatus === 'delayed' ||
             scheduleStatus === 'completed'
           );
         case 'departure':
@@ -74,11 +76,16 @@ const MainPage = () => {
           return (
             scheduleStatus === 'departure' ||
             scheduleStatus === 'arrival' ||
+            scheduleStatus === 'delayed' ||
             scheduleStatus === 'completed'
           );
         case 'arrival':
           // 도착 보고: arrival 이상이면 disabled
-          return scheduleStatus === 'arrival' || scheduleStatus === 'completed';
+          return (
+            scheduleStatus === 'arrival' ||
+            scheduleStatus === 'delayed' ||
+            scheduleStatus === 'completed'
+          );
         case 'completed':
           // 종료 보고: completed이면 disabled
           return scheduleStatus === 'completed';
@@ -116,6 +123,7 @@ const MainPage = () => {
           if (
             scheduleStatus !== 'departure' &&
             scheduleStatus !== 'arrival' &&
+            scheduleStatus !== 'delayed' &&
             scheduleStatus !== 'completed'
           ) {
             alert('출발 보고를 먼저 완료해주세요.');
@@ -124,7 +132,11 @@ const MainPage = () => {
           return true;
         case 'completed':
           // 종료보고는 도착보고가 완료되어야 함
-          if (scheduleStatus !== 'arrival' && scheduleStatus !== 'completed') {
+          if (
+            scheduleStatus !== 'arrival' &&
+            scheduleStatus !== 'delayed' &&
+            scheduleStatus !== 'completed'
+          ) {
             alert('도착 보고를 먼저 완료해주세요.');
             return false;
           }
