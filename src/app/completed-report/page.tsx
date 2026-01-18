@@ -46,11 +46,12 @@ const CompletedReportPage = () => {
     fetchPolicy: 'cache-and-network',
   });
 
-  // reportStatus가 'arrival' 이상인 스케줄만 필터링 (도착 보고가 완료된 스케줄)
+  // reportStatus가 'arrival' 이상인 스케줄만 필터링 (도착/지연도착 보고 완료된 스케줄)
   const targetSchedule =
     data?.getTodaySchedules?.find(
       (schedule) =>
         schedule.reportStatus === 'arrival' ||
+        schedule.reportStatus === 'delayed' ||
         schedule.reportStatus === 'completed'
     ) || null;
 
