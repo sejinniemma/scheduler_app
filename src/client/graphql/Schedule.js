@@ -50,6 +50,29 @@ export const GET_TODAY_SCHEDULES = gql`
   }
 `;
 
+// 사용자 기준 assigned 스케줄 전체 조회
+export const GET_ASSIGNED_SCHEDULES = gql`
+  query GetAssignedSchedules {
+    getAssignedSchedules {
+      id
+      mainUser
+      subUser
+      groom
+      bride
+      time
+      userArrivalTime
+      location
+      venue
+      date
+      scheduledAt
+      memo
+      status
+      createdAt
+      updatedAt
+    }
+  }
+`;
+
 // Schedule Mutations
 export const CREATE_SCHEDULE = gql`
   mutation CreateSchedule(

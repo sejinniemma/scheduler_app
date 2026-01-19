@@ -1,6 +1,7 @@
 import Schedule from '../models/Schedule';
 import Report from '../models/Report';
 import User from '../models/User';
+import UserConfirm from '../models/UserConfirm';
 import { connectToDatabase } from '../mongodb';
 import { gql } from '@apollo/client';
 import { getToday } from '@/src/lib/utiles';
@@ -30,6 +31,7 @@ export const typeDefs = gql`
 
   type Query {
     getTodaySchedules: [Schedule!]!
+    getAssignedSchedules: [Schedule!]!
     schedule(id: ID!): Schedule
   }
 
@@ -131,6 +133,24 @@ export const resolvers = {
         (schedule) => schedule.reportStatus !== 'completed'
       );
       return withOutCompleted;
+    },
+
+    // 로그인 사용자의 assigned 스케줄 전체 조회 (날짜 제한 없음)
+    getAssignedSchedules: async (parent, args, context) => {
+      if (!context.user) {
+        throw new Error('인증이 필요합니다.');
+      }
+      await connectToDatabase();
+
+      const today = getToday();
+      const query = {
+        $or: [{ mainUser: context.user.id }, { subUser: context.user.id }],
+        status: 'assigned',
+        date: { $gte: today }, // 오늘 이후만
+      };
+
+      const schedules = await Schedule.find(query).sort({ date: 1, time: 1 });
+      return schedules;
     },
 
     schedule: async (parent, { id }, context) => {
@@ -261,8 +281,14 @@ export const resolvers = {
 
         // status가 'assigned'인 것만 업데이트
         if (schedule.status === 'assigned') {
-          schedule.status = 'confirmed';
-          await schedule.save();
+          // schedule.status = 'confirmed';
+          // await schedule.save();
+          // 사용자별 확정 기록 저장 (중복이면 갱신)
+          await UserConfirm.findOneAndUpdate(
+            { scheduleId: schedule.id, userId: context.user.id },
+            { confirmed: true, confirmedAt: new Date() },
+            { upsert: true, new: true, setDefaultsOnInsert: true }
+          );
           updatedCount++;
         }
       }
