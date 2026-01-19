@@ -10,6 +10,7 @@ import { useQuery, useMutation } from '@apollo/client/react';
 import {
   GET_ASSIGNED_SCHEDULES,
   CONFIRM_SCHEDULES,
+  GET_USER_CONFIRMED_SCHEDULES,
 } from '@/src/client/graphql/Schedule';
 import type { Schedule } from '@/src/types/schedule';
 
@@ -25,10 +26,15 @@ interface ScheduleGroup {
   schedules: ScheduleWithStatus[];
   scheduleIds: string[];
   assignedScheduleIds: string[];
+  remainingAssignedIds: string[];
 }
 
 interface GetAssignedSchedulesData {
   getAssignedSchedules: Schedule[];
+}
+
+interface GetUserConfirmedSchedulesData {
+  userConfirmedSchedules: string[];
 }
 
 const ScheduleManagementPage = () => {
@@ -44,6 +50,12 @@ const ScheduleManagementPage = () => {
       fetchPolicy: 'cache-and-network',
     }
   );
+
+  // 사용자가 이미 확정한 스케줄 ID 목록
+  const { data: confirmedData, loading: confirmedLoading } =
+    useQuery<GetUserConfirmedSchedulesData>(GET_USER_CONFIRMED_SCHEDULES, {
+      fetchPolicy: 'cache-and-network',
+    });
 
   // useMutation으로 스케줄 확정 처리
   const [confirmSchedules] = useMutation(CONFIRM_SCHEDULES, {
@@ -62,6 +74,11 @@ const ScheduleManagementPage = () => {
   const schedules = useMemo(
     () => data?.getAssignedSchedules || [],
     [data?.getAssignedSchedules]
+  );
+
+  const confirmedSet = useMemo(
+    () => new Set(confirmedData?.userConfirmedSchedules || []),
+    [confirmedData?.userConfirmedSchedules]
   );
 
   // 날짜별로 그룹화
@@ -87,6 +104,10 @@ const ScheduleManagementPage = () => {
         );
 
         if (assignedSchedules.length > 0) {
+          const remainingAssignedIds = assignedSchedules
+            .map((s) => s.id)
+            .filter((id) => !confirmedSet.has(id));
+
           result.push({
             rawDate: date,
             date: formatDateForGroup(date),
@@ -105,18 +126,20 @@ const ScheduleManagementPage = () => {
             assignedScheduleIds: assignedSchedules.map(
               (schedule) => schedule.id
             ),
+            remainingAssignedIds,
           });
         }
       });
 
     return result;
-  }, [schedules]);
+  }, [schedules, confirmedSet]);
 
   // 날짜 단위 스케줄 확정 처리 (해당 날짜의 모든 assigned 스케줄)
   const handleConfirmSchedulesByDate = async (
     date: string,
     scheduleIds: string[]
   ) => {
+    if (scheduleIds.length === 0) return;
     setConfirmingDates((prev) => new Set(prev).add(date));
 
     try {
@@ -137,7 +160,7 @@ const ScheduleManagementPage = () => {
     }
   };
 
-  if (loading) {
+  if (loading || confirmedLoading) {
     return (
       <MobileLayout>
         <PageHeader title='내 스케줄 확정/확인' />
@@ -178,8 +201,8 @@ const ScheduleManagementPage = () => {
                       <ScheduleInfo schedule={schedule} />
                     </div>
                   ))}
-                  {/* 날짜 단위 확정 버튼 (해당 날짜의 assigned 스케줄 전체 처리) */}
-                  {group.assignedScheduleIds.length > 0 && (
+                  {/* 날짜 단위 확정 버튼 (해당 날짜의 assigned 스케줄 중 미확정만 처리) */}
+                  {group.remainingAssignedIds.length > 0 && (
                     <Button
                       text={
                         confirmingDates.has(group.rawDate)
@@ -189,7 +212,7 @@ const ScheduleManagementPage = () => {
                       onClick={() =>
                         handleConfirmSchedulesByDate(
                           group.rawDate,
-                          group.assignedScheduleIds
+                          group.remainingAssignedIds
                         )
                       }
                       disabled={confirmingDates.has(group.rawDate)}

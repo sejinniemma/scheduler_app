@@ -32,6 +32,7 @@ export const typeDefs = gql`
   type Query {
     getTodaySchedules: [Schedule!]!
     getAssignedSchedules: [Schedule!]!
+    userConfirmedSchedules: [String!]!
     schedule(id: ID!): Schedule
   }
 
@@ -151,6 +152,19 @@ export const resolvers = {
 
       const schedules = await Schedule.find(query).sort({ date: 1, time: 1 });
       return schedules;
+    },
+
+    // 현재 사용자가 이미 확정한 스케줄 ID 목록
+    userConfirmedSchedules: async (parent, args, context) => {
+      if (!context.user) {
+        throw new Error('인증이 필요합니다.');
+      }
+      await connectToDatabase();
+      const confirms = await UserConfirm.find({
+        userId: context.user.id,
+        confirmed: true,
+      }).select('scheduleId');
+      return confirms.map((c) => c.scheduleId);
     },
 
     schedule: async (parent, { id }, context) => {

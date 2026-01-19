@@ -213,7 +213,7 @@ const MainPage = () => {
           {/* Title */}
           <div className='flex items-center justify-between'>
             <h1 className='text-body4 text-normal font-semibold'>
-              {userName ? `${userName}님, ` : ''}금일 스케쥴 진행상황
+              {userName ? `${userName}님, ` : ''}금일 스케줄 진행상황
             </h1>
             <span className='text-caption2 text-default'>
               총 {transformedSchedules.length}건

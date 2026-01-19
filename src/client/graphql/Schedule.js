@@ -73,6 +73,12 @@ export const GET_ASSIGNED_SCHEDULES = gql`
   }
 `;
 
+export const GET_USER_CONFIRMED_SCHEDULES = gql`
+  query GetUserConfirmedSchedules {
+    userConfirmedSchedules
+  }
+`;
+
 // Schedule Mutations
 export const CREATE_SCHEDULE = gql`
   mutation CreateSchedule(
@@ -143,7 +149,7 @@ export const DELETE_SCHEDULE = gql`
 `;
 
 export const CONFIRM_SCHEDULES = gql`
-  mutation ConfirmSchedules($scheduleIds: [ID!]!) {
+  mutation ConfirmSchedules($scheduleIds: [String!]!) {
     confirmSchedules(scheduleIds: $scheduleIds) {
       success
       updatedCount
