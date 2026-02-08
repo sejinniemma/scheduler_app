@@ -61,18 +61,10 @@ export const typeDefs = gql`
 export const resolvers = {
   Query: {
     me: async (parent, args, context) => {
-      if (!context.user) {
-        throw new Error('인증이 필요합니다.');
-      }
-      await connectToDatabase();
       return await User.findOne({ id: context.user.id });
     },
 
     users: async (parent, args, context) => {
-      if (!context.user) {
-        throw new Error('인증이 필요합니다.');
-      }
-      await connectToDatabase();
       return await User.find({});
     },
   },
@@ -98,7 +90,6 @@ export const resolvers = {
       // if (!context.user || context.user.role !== 'ADMIN') {
       //   throw new Error('관리자 권한이 필요합니다.');
       // }
-      await connectToDatabase();
       const user = new User({
         name,
         phone,
@@ -132,10 +123,6 @@ export const resolvers = {
       },
       context
     ) => {
-      if (!context.user) {
-        throw new Error('인증이 필요합니다.');
-      }
-      await connectToDatabase();
       const user = await User.findOne({ id });
       if (!user) {
         throw new Error('사용자를 찾을 수 없습니다.');
@@ -161,7 +148,6 @@ export const resolvers = {
       if (!context.user || context.user.role !== 'ADMIN') {
         throw new Error('관리자 권한이 필요합니다.');
       }
-      await connectToDatabase();
       const user = await User.findOne({ id });
       if (user) {
         await User.findOneAndDelete({ id });

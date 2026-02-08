@@ -2,7 +2,6 @@ import Schedule from '../models/Schedule';
 import Report from '../models/Report';
 import User from '../models/User';
 import UserConfirm from '../models/UserConfirm';
-import { connectToDatabase } from '../mongodb';
 import { gql } from '@apollo/client';
 import { getToday } from '@/src/lib/utiles';
 
@@ -73,18 +72,13 @@ export const typeDefs = gql`
 
   type ConfirmSchedulesResult {
     success: Boolean!
-    updatedCount: Int!
+    message: String!
   }
 `;
 
 export const resolvers = {
   Query: {
     getTodaySchedules: async (parent, args, context) => {
-      if (!context.user) {
-        throw new Error('인증이 필요합니다.');
-      }
-      await connectToDatabase();
-
       // 오늘 날짜 가져오기
       const today = getToday();
 
@@ -127,22 +121,17 @@ export const resolvers = {
             // Report의 status를 사용 (없으면 null)
             reportStatus: report?.status || null,
           };
-        })
+        }),
       );
       console.log('schedulesWithReport', schedulesWithReport);
       const withOutCompleted = schedulesWithReport.filter(
-        (schedule) => schedule.reportStatus !== 'completed'
+        (schedule) => schedule.reportStatus !== 'completed',
       );
       return withOutCompleted;
     },
 
     // 로그인 사용자의 assigned 스케줄 전체 조회 (날짜 제한 없음)
     getAssignedSchedules: async (parent, args, context) => {
-      if (!context.user) {
-        throw new Error('인증이 필요합니다.');
-      }
-      await connectToDatabase();
-
       const today = getToday();
       const query = {
         $or: [{ mainUser: context.user.id }, { subUser: context.user.id }],
@@ -156,10 +145,6 @@ export const resolvers = {
 
     // 현재 사용자가 이미 확정한 스케줄 ID 목록
     userConfirmedSchedules: async (parent, args, context) => {
-      if (!context.user) {
-        throw new Error('인증이 필요합니다.');
-      }
-      await connectToDatabase();
       const confirms = await UserConfirm.find({
         userId: context.user.id,
         confirmed: true,
@@ -168,10 +153,6 @@ export const resolvers = {
     },
 
     schedule: async (parent, { id }, context) => {
-      if (!context.user) {
-        throw new Error('인증이 필요합니다.');
-      }
-      await connectToDatabase();
       const schedule = await Schedule.findOne({ id });
       if (!schedule) {
         throw new Error('스케줄을 찾을 수 없습니다.');
@@ -223,12 +204,7 @@ export const resolvers = {
         memo,
         status = 'unassigned',
       },
-      context
     ) => {
-      if (!context.user) {
-        throw new Error('인증이 필요합니다.');
-      }
-      await connectToDatabase();
       const schedule = new Schedule({
         mainUser,
         subUser,
@@ -246,10 +222,6 @@ export const resolvers = {
     },
 
     updateSchedule: async (parent, { id, ...updates }, context) => {
-      if (!context.user) {
-        throw new Error('인증이 필요합니다.');
-      }
-      await connectToDatabase();
       const schedule = await Schedule.findOne({ id });
       if (!schedule) {
         throw new Error('스케줄을 찾을 수 없습니다.');
@@ -266,24 +238,25 @@ export const resolvers = {
     },
 
     confirmSchedules: async (parent, { scheduleIds }, context) => {
-      if (!context.user) {
-        throw new Error('인증이 필요합니다.');
-      }
-      await connectToDatabase();
-
       if (!scheduleIds || scheduleIds.length === 0) {
-        throw new Error('스케줄 ID 배열이 필요합니다.');
+        return {
+          success: false,
+          message: '스케줄 ID 배열이 필요합니다.',
+        };
       }
 
       // 모든 스케줄을 찾아서 권한 확인 및 업데이트
       const schedules = await Schedule.find({ id: { $in: scheduleIds } });
 
       if (schedules.length === 0) {
-        throw new Error('스케줄을 찾을 수 없습니다.');
+        return {
+          success: false,
+          message: '스케줄을 찾을 수 없습니다.',
+        };
       }
 
-      // 권한 확인 및 업데이트 (assigned인 것만)
-      let updatedCount = 0;
+      let confirmedCount = 0;
+
       for (const schedule of schedules) {
         // 본인이 mainUser 또는 subUser인지 확인
         if (
@@ -295,29 +268,45 @@ export const resolvers = {
 
         // status가 'assigned'인 것만 업데이트
         if (schedule.status === 'assigned') {
-          // schedule.status = 'confirmed';
-          // await schedule.save();
-          // 사용자별 확정 기록 저장 (중복이면 갱신)
+          // 작가 스케쥴 확정 기록 저장
           await UserConfirm.findOneAndUpdate(
             { scheduleId: schedule.id, userId: context.user.id },
             { confirmed: true, confirmedAt: new Date() },
-            { upsert: true, new: true, setDefaultsOnInsert: true }
+            { upsert: true, new: true, setDefaultsOnInsert: true },
           );
-          updatedCount++;
+
+          // 해당 스케쥴의 작가,서브작가 id 목록
+          const requiredUserIds = [
+            schedule.mainUser,
+            ...(schedule.subUser ? [schedule.subUser] : []),
+          ];
+
+          // 모두 확정완료를 눌렀는지 확인
+          const confirmations = await UserConfirm.find({
+            scheduleId: schedule.id,
+            userId: { $in: requiredUserIds },
+            confirmed: true,
+          }).select('userId');
+
+          // 모든 필요 사용자에 대한 확정이 완료되면 스케줄 상태 'confirmed'로 변경
+          if (confirmations.length === requiredUserIds.length) {
+            schedule.status = 'confirmed';
+            await schedule.save();
+            confirmedCount++;
+          }
         }
       }
 
       return {
-        success: true,
-        updatedCount,
+        success: confirmedCount > 0,
+        message:
+          confirmedCount > 0
+            ? `총 ${confirmedCount}건 확정되었습니다.`
+            : '확정 가능한 스케줄이 없습니다.',
       };
     },
 
     deleteSchedule: async (parent, { id }, context) => {
-      if (!context.user) {
-        throw new Error('인증이 필요합니다.');
-      }
-      await connectToDatabase();
       const schedule = await Schedule.findOne({ id });
       if (!schedule) {
         return false;

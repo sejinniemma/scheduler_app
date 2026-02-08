@@ -1,10 +1,11 @@
-import { connectToDatabase } from '../db/mongodb';
 import { ApolloServer } from '@apollo/server';
 import { startServerAndCreateNextHandler } from '@as-integrations/next';
 import type { NextRequest } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '../auth/authOptions';
 import type { NextAuthOptions } from 'next-auth';
+import { GraphQLError } from 'graphql';
+import { connectToDatabase } from '../db/mongodb';
 
 import { typeDefs as UserTypeDefs } from '../db/handlers/User';
 import { typeDefs as ScheduleTypeDefs } from '../db/handlers/Schedule';
@@ -26,12 +27,16 @@ const server = new ApolloServer({
 
 const handler = startServerAndCreateNextHandler(server, {
   context: async () => {
-    const db = await connectToDatabase();
+    await connectToDatabase();
     // NextAuth 세션 가져오기
     const session = await getServerSession(authOptions as NextAuthOptions);
+    if (!session?.user?.id) {
+      throw new GraphQLError('인증이 필요합니다.', {
+        extensions: { code: 'UNAUTHENTICATED' },
+      });
+    }
     return {
-      db,
-      user: session?.user ? { id: session.user.id } : null,
+      user: { id: session.user.id },
     };
   },
 });

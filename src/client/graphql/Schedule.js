@@ -152,7 +152,7 @@ export const CONFIRM_SCHEDULES = gql`
   mutation ConfirmSchedules($scheduleIds: [String!]!) {
     confirmSchedules(scheduleIds: $scheduleIds) {
       success
-      updatedCount
+      message
     }
   }
 `;

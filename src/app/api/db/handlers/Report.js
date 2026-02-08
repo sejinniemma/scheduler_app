@@ -1,6 +1,5 @@
 import Report from '../models/Report';
 import Schedule from '../models/Schedule';
-import { connectToDatabase } from '../mongodb';
 import { gql } from '@apollo/client';
 import { DateTimeResolver } from 'graphql-scalars';
 
@@ -55,18 +54,10 @@ export const resolvers = {
   DateTime: DateTimeResolver,
   Query: {
     reports: async (parent, args, context) => {
-      if (!context.user) {
-        throw new Error('인증이 필요합니다.');
-      }
-      await connectToDatabase();
       return await Report.find({ userId: context.user.id });
     },
 
     report: async (parent, { id }, context) => {
-      if (!context.user) {
-        throw new Error('인증이 필요합니다.');
-      }
-      await connectToDatabase();
       const report = await Report.findOne({ id });
       if (!report) {
         throw new Error('보고를 찾을 수 없습니다.');
@@ -79,10 +70,6 @@ export const resolvers = {
     },
 
     reportsBySchedule: async (parent, { scheduleId }, context) => {
-      if (!context.user) {
-        throw new Error('인증이 필요합니다.');
-      }
-      await connectToDatabase();
       // 스케줄이 본인 것인지 확인
       const schedule = await Schedule.findOne({ id: scheduleId });
       if (!schedule) {
@@ -102,10 +89,6 @@ export const resolvers = {
     },
 
     reportsByUser: async (parent, { userId }, context) => {
-      if (!context.user) {
-        throw new Error('인증이 필요합니다.');
-      }
-      await connectToDatabase();
       // 본인의 보고만 조회 가능
       if (userId !== context.user.id) {
         throw new Error('권한이 없습니다.');
@@ -120,11 +103,6 @@ export const resolvers = {
       { scheduleId, status, estimatedTime, currentStep = 0, memo },
       context
     ) => {
-      if (!context.user) {
-        throw new Error('인증이 필요합니다.');
-      }
-      await connectToDatabase();
-
       // 스케줄 확인
       const schedule = await Schedule.findOne({ id: scheduleId });
       if (!schedule) {
@@ -161,10 +139,6 @@ export const resolvers = {
       { id, status, estimatedTime, currentStep, memo, imageUrl },
       context
     ) => {
-      if (!context.user) {
-        throw new Error('인증이 필요합니다.');
-      }
-      await connectToDatabase();
       const report = await Report.findOne({ id });
       if (!report) {
         throw new Error('보고를 찾을 수 없습니다.');
@@ -190,10 +164,6 @@ export const resolvers = {
     },
 
     deleteReport: async (parent, { id }, context) => {
-      if (!context.user) {
-        throw new Error('인증이 필요합니다.');
-      }
-      await connectToDatabase();
       const report = await Report.findOne({ id });
       if (!report) {
         return false;
