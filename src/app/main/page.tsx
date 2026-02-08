@@ -6,30 +6,16 @@ import { useSchedule } from '@/src/contexts/ScheduleContext';
 import { useSession } from 'next-auth/react';
 import { ScheduleListLoading } from '@/src/components/ScheduleList';
 import ScheduleListContent from '@/src/components/ScheduleList';
-import { useEffect, useMemo, useCallback } from 'react';
+import { useMemo, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 
 const MainPage = () => {
   const { data: session } = useSession();
   const userName = session?.user?.name || '';
-  const { schedules, refetch, isLoading } = useSchedule();
+  const { schedules, isLoading } = useSchedule();
   const router = useRouter();
 
-  // 페이지가 보일 때 스케줄 새로고침 (다른 페이지에서 돌아올 때)
-  useEffect(() => {
-    // 페이지가 보일 때마다 실행 (visibilitychange 이벤트)
-    const handleVisibilityChange = () => {
-      if (document.visibilityState === 'visible') {
-        refetch();
-      }
-    };
-
-    document.addEventListener('visibilitychange', handleVisibilityChange);
-    return () => {
-      document.removeEventListener('visibilitychange', handleVisibilityChange);
-    };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []); // refetch를 의존성에서 제거하여 무한 루프 방지
+  // refetchQueries에서 메인 쿼리를 다시 불러오므로 별도 강제 refetch 없음
   // Context에서 가져온 스케줄 데이터 변환
   const transformedSchedules = schedules.map((schedule) => ({
     id: schedule.id,

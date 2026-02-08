@@ -11,8 +11,10 @@ import {
   GET_ASSIGNED_SCHEDULES,
   CONFIRM_SCHEDULES,
   GET_USER_CONFIRMED_SCHEDULES,
+  GET_TODAY_SCHEDULES,
 } from '@/src/client/graphql/Schedule';
 import type { Schedule } from '@/src/types/schedule';
+import { useRouter } from 'next/navigation';
 
 interface ScheduleWithStatus extends ScheduleInfoData {
   id: string;
@@ -38,6 +40,7 @@ interface GetUserConfirmedSchedulesData {
 }
 
 const ScheduleManagementPage = () => {
+  const router = useRouter();
   // 날짜 단위 로딩 상태 관리
   const [confirmingDates, setConfirmingDates] = useState<Set<string>>(
     new Set()
@@ -52,18 +55,16 @@ const ScheduleManagementPage = () => {
   );
 
   // 사용자가 이미 확정한 스케줄 ID 목록
-  const { data: confirmedData, loading: confirmedLoading } =
-    useQuery<GetUserConfirmedSchedulesData>(GET_USER_CONFIRMED_SCHEDULES, {
-      fetchPolicy: 'cache-and-network',
-    });
+  const {
+    data: confirmedData,
+    loading: confirmedLoading,
+    refetch: refetchConfirmed,
+  } = useQuery<GetUserConfirmedSchedulesData>(GET_USER_CONFIRMED_SCHEDULES, {
+    fetchPolicy: 'cache-and-network',
+  });
 
   // useMutation으로 스케줄 확정 처리
   const [confirmSchedules] = useMutation(CONFIRM_SCHEDULES, {
-    onCompleted: () => {
-      alert('스케줄이 확정되었습니다.');
-      setConfirmingDates(new Set()); // 로딩 상태 초기화
-      refetch();
-    },
     onError: (error) => {
       console.error('스케줄 확정 오류:', error);
       setConfirmingDates(new Set()); // 에러 시에도 로딩 상태 초기화
@@ -147,7 +148,13 @@ const ScheduleManagementPage = () => {
         variables: {
           scheduleIds,
         },
+        // 메인 페이지(useSchedule) 최신화만 우선 반영
+        refetchQueries: [{ query: GET_TODAY_SCHEDULES }],
+        awaitRefetchQueries: true,
       });
+      await Promise.all([refetch(), refetchConfirmed()]); // 로컬 목록/확정 정보 갱신
+      router.refresh(); // 캐시 무효화
+      router.push('/main'); // 메인 이동
     } catch (error) {
       // onError에서 처리되지만, 여기서도 처리 가능
       console.error('스케줄 확정 오류:', error);

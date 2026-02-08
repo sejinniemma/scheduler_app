@@ -14,6 +14,7 @@ interface ScheduleInfoProps {
 }
 
 const ScheduleInfo = ({ schedule }: ScheduleInfoProps) => {
+  console.log(schedule);
   return (
     <div className='flex flex-col items-start justify-center border bg-white border-line-edge rounded-xl py-[18px] px-[12px]'>
       {/* 커플 정보 */}
@@ -74,7 +75,10 @@ const ScheduleInfo = ({ schedule }: ScheduleInfoProps) => {
       {/* memo */}
       <div className='flex items-center gap-[6px] pt-[10px] w-full'>
         <Image src='/images/icons/memo.png' alt='memo' width={16} height={16} />
-        <p className='text-caption1 text-normal font-medium'>{schedule.memo}</p>
+    <div className='flex flex-col'>
+          <p className='text-caption1 text-normal font-medium'>내부메모</p>
+        <p className='text-caption2 text-dark'>{schedule.memo}</p>
+    </div>
       </div>
     </div>
   );

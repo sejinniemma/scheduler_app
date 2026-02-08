@@ -265,7 +265,8 @@ export const resolvers = {
         ) {
           continue; // 권한이 없는 스케줄은 건너뛰기
         }
-
+        console.log('mainUser', schedule.mainUser);
+        console.log('subUser', schedule.subUser);
         // status가 'assigned'인 것만 업데이트
         if (schedule.status === 'assigned') {
           // 작가 스케쥴 확정 기록 저장
@@ -280,18 +281,20 @@ export const resolvers = {
             schedule.mainUser,
             ...(schedule.subUser ? [schedule.subUser] : []),
           ];
-
+          console.log('requiredUserIds', requiredUserIds);
           // 모두 확정완료를 눌렀는지 확인
           const confirmations = await UserConfirm.find({
             scheduleId: schedule.id,
             userId: { $in: requiredUserIds },
             confirmed: true,
           }).select('userId');
-
+          console.log('confirmations', confirmations);
           // 모든 필요 사용자에 대한 확정이 완료되면 스케줄 상태 'confirmed'로 변경
           if (confirmations.length === requiredUserIds.length) {
-            schedule.status = 'confirmed';
-            await schedule.save();
+            await Schedule.updateOne(
+              { id: schedule.id },
+              { status: 'confirmed' }
+            );
             confirmedCount++;
           }
         }
