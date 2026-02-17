@@ -3,6 +3,14 @@ import { connectToDatabase } from '../../db/mongodb';
 import Schedule from '../../db/models/Schedule';
 import Report from '../../db/models/Report';
 import User from '../../db/models/User';
+import {
+  sendCronWakeupAlimtalk,
+  sendCronDepartureAlimtalk,
+  sendCronArrivalAlimtalk,
+  sendCronAdminDelayAlimtalk,
+  sendCronAdminDepartureDelayAlimtalk,
+  sendCronAdminArrivalDelayAlimtalk,
+} from '@/src/lib/kakaoAlimtalk';
 
 const CRON_SECRET = process.env.CRON_SECRET;
 const MS_PER_HOUR = 60 * 60 * 1000;
@@ -21,34 +29,49 @@ function parseArrivalTime(date: string, timeStr: string): Date {
   return new Date(`${date}T${t}`);
 }
 
-/** 기상 알림톡 전송 (실제 연동 시 구현) */
-async function sendWakeupNotification(_userPhone: string, _scheduleInfo: string) {
-  // TODO: 알림톡 API 연동
-  console.log('[CRON] 기상 알림톡 전송 (미구현)', _userPhone, _scheduleInfo);
+// 기상 알림톡 발송
+async function sendWakeupNotification(userPhone: string, scheduleInfo: string) {
+  await sendCronWakeupAlimtalk(userPhone, scheduleInfo);
 }
 
-/** 출발 보고 요청 알림톡 전송 (실제 연동 시 구현) */
-async function sendDepartureNotification(_userPhone: string, _scheduleInfo: string) {
-  // TODO: 알림톡 API 연동
-  console.log('[CRON] 출발 보고 요청 알림톡 전송 (미구현)', _userPhone, _scheduleInfo);
+// 출발 알림톡 발송
+async function sendDepartureNotification(
+  userPhone: string,
+  scheduleInfo: string,
+) {
+  await sendCronDepartureAlimtalk(userPhone, scheduleInfo);
 }
 
-/** 도착 보고 요청 알림톡 전송 (실제 연동 시 구현) */
-async function sendArrivalNotification(_userPhone: string, _scheduleInfo: string) {
-  // TODO: 알림톡 API 연동
-  console.log('[CRON] 도착 보고 요청 알림톡 전송 (미구현)', _userPhone, _scheduleInfo);
+// 도착 알림톡 발송
+async function sendArrivalNotification(
+  userPhone: string,
+  scheduleInfo: string,
+) {
+  await sendCronArrivalAlimtalk(userPhone, scheduleInfo);
 }
 
-/** 관리자 지연 알림톡 전송 (기상/출발 지연, 실제 연동 시 구현) */
-async function sendAdminDelayNotification(_scheduleInfo: string, _userName: string) {
-  // TODO: 관리자 알림톡 API 연동
-  console.log('[CRON] 관리자 지연 알림 전송 (미구현)', _scheduleInfo, _userName);
+// 관리자 기상 지연 알림톡 발송
+async function sendAdminDelayNotification(
+  scheduleInfo: string,
+  userName: string,
+) {
+  await sendCronAdminDelayAlimtalk(scheduleInfo, userName);
 }
 
-/** ETA 시점 도착 지연: 관리자 알림 + 어드민 개입 (실제 연동 시 구현) */
-async function sendAdminArrivalDelayNotification(_scheduleInfo: string, _userName: string) {
-  // TODO: 관리자 알림톡 API 연동 + 어드민 대시/티켓 등 연동
-  console.log('[CRON] 관리자 도착 지연 알림 + 어드민 개입 (미구현)', _scheduleInfo, _userName);
+// 관리자 출발 지연 알림톡 발송
+async function sendAdminDepartureDelayNotification(
+  scheduleInfo: string,
+  userName: string,
+) {
+  await sendCronAdminDepartureDelayAlimtalk(scheduleInfo, userName);
+}
+
+// 관리자 도착 지연 알림톡 발송
+async function sendAdminArrivalDelayNotification(
+  scheduleInfo: string,
+  userName: string,
+) {
+  await sendCronAdminArrivalDelayAlimtalk(scheduleInfo, userName);
 }
 
 export async function GET(request: NextRequest) {
@@ -67,12 +90,13 @@ export async function GET(request: NextRequest) {
       status: 'confirmed',
     }).lean();
 
-    const results: { scheduleId: string; action?: string; error?: string }[] = [];
+    const results: { scheduleId: string; action?: string; error?: string }[] =
+      [];
 
     for (const schedule of schedules) {
       const arrivalTime = parseArrivalTime(
         schedule.date,
-        schedule.userArrivalTime || schedule.time
+        schedule.userArrivalTime || schedule.time,
       );
       const windowMs = WINDOW_MINUTES * 60 * 1000;
       const window4hStart = new Date(arrivalTime.getTime() - 4 * MS_PER_HOUR);
@@ -109,7 +133,7 @@ export async function GET(request: NextRequest) {
           } else if (report.status === 'pending') {
             await Report.updateOne(
               { id: report.id },
-              { status: 'wakeup_delayed' }
+              { status: 'wakeup_delayed' },
             );
             await sendAdminDelayNotification(scheduleLabel, userName);
             results.push({ scheduleId: schedule.id, action: 'wakeup_delayed' });
@@ -129,10 +153,13 @@ export async function GET(request: NextRequest) {
           ) {
             await Report.updateOne(
               { id: report.id },
-              { status: 'departure_delayed' }
+              { status: 'departure_delayed' },
             );
-            await sendAdminDelayNotification(scheduleLabel, userName);
-            results.push({ scheduleId: schedule.id, action: 'departure_delayed' });
+            await sendAdminDepartureDelayNotification(scheduleLabel, userName);
+            results.push({
+              scheduleId: schedule.id,
+              action: 'departure_delayed',
+            });
           }
           continue;
         }
@@ -140,14 +167,19 @@ export async function GET(request: NextRequest) {
         // ETA: ARRIVED → 정상 진행 / 미도착 → ARRIVAL_DELAYED + 관리자 알림 + 어드민 개입
         if (now >= window0hStart && now < window0hEnd) {
           const isArrived =
-            report.status === 'arrival' || report.status === 'arrival_delayed' || report.status === 'completed';
+            report.status === 'arrival' ||
+            report.status === 'arrival_delayed' ||
+            report.status === 'completed';
           if (!isArrived) {
             await Report.updateOne(
               { id: report.id },
-              { status: 'arrival_delayed' }
+              { status: 'arrival_delayed' },
             );
             await sendAdminArrivalDelayNotification(scheduleLabel, userName);
-            results.push({ scheduleId: schedule.id, action: 'arrival_delayed' });
+            results.push({
+              scheduleId: schedule.id,
+              action: 'arrival_delayed',
+            });
           }
         }
       }
@@ -158,7 +190,7 @@ export async function GET(request: NextRequest) {
     console.error('[CRON] schedule-notifications error:', error);
     return NextResponse.json(
       { error: error instanceof Error ? error.message : 'Cron failed' },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

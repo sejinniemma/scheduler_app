@@ -4,6 +4,7 @@ import User from '../models/User';
 import UserConfirm from '../models/UserConfirm';
 import { gql } from '@apollo/client';
 import { getToday } from '@/src/lib/utiles';
+import { sendScheduleConfirmedAlimtalk } from '@/src/lib/kakaoAlimtalk';
 
 export const typeDefs = gql`
   scalar DateTime
@@ -296,6 +297,24 @@ export const resolvers = {
               { status: 'confirmed' }
             );
             confirmedCount++;
+
+            // 확정 완료 즉시 카카오 알림톡 발송 (mainUser, subUser 각각)
+            const userIds = [schedule.mainUser, schedule.subUser].filter(Boolean);
+            const users = await User.find({ id: { $in: userIds } }).lean();
+            const scheduleInfo = {
+              date: schedule.date,
+              time: schedule.time || schedule.userArrivalTime,
+              groom: schedule.groom,
+              bride: schedule.bride,
+              venue: schedule.venue || schedule.location || '',
+            };
+            for (const u of users) {
+              if (u.phone) {
+                sendScheduleConfirmedAlimtalk(u.phone, u.name, scheduleInfo).catch(
+                  (err) => console.error('[confirmSchedules] 알림톡 발송 실패', u.phone, err)
+                );
+              }
+            }
           }
         }
       }
