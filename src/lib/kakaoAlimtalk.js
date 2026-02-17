@@ -4,7 +4,7 @@
  *
  * 공통 env: KAKAO_ALIMTALK_API_URL, KAKAO_ALIMTALK_API_KEY,
  *   KAKAO_ALIMTALK_SENDER_KEY, KAKAO_ALIMTALK_SENDER_NO (선택)
- * 템플릿별: KAKAO_ALIMTALK_TEMPLATE_CODE_CONFIRMED, _WAKEUP, _DEPARTURE, _ARRIVAL,
+ * 템플릿별: KAKAO_ALIMTALK_TEMPLATE_CODE_CONFIRMED, _WAKEUP, _DEPARTURE, _ARRIVAL, _COMPLETED,
  *   _ADMIN_DELAY, _ADMIN_DEPARTURE_DELAY, _ADMIN_ARRIVAL_DELAY
  * 관리자 수신: KAKAO_ALIMTALK_ADMIN_PHONE (쉼표 구분 복수 가능)
  */
@@ -121,6 +121,16 @@ export async function sendCronArrivalAlimtalk(phone, scheduleLabel) {
   const templateCode = process.env.KAKAO_ALIMTALK_TEMPLATE_ARRIVAL;
   if (!templateCode) {
     console.log('[CRON] 도착 알림톡 미설정 (KAKAO_ALIMTALK_TEMPLATE_ARRIVAL)', phone, scheduleLabel);
+    return;
+  }
+  await sendKakaoAlimtalk(phone, templateCode, { scheduleLabel });
+}
+
+/** 종료 알림톡 (예식+1h 시점, 템플릿: KAKAO_ALIMTALK_TEMPLATE_COMPLETED) */
+export async function sendCronCompletedAlimtalk(phone, scheduleLabel) {
+  const templateCode = process.env.KAKAO_ALIMTALK_TEMPLATE_COMPLETED;
+  if (!templateCode) {
+    console.log('[CRON] 종료 알림톡 미설정 (KAKAO_ALIMTALK_TEMPLATE_COMPLETED)', phone, scheduleLabel);
     return;
   }
   await sendKakaoAlimtalk(phone, templateCode, { scheduleLabel });
