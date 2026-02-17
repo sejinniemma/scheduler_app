@@ -51,7 +51,7 @@ const CompletedReportPage = () => {
     data?.getTodaySchedules?.find(
       (schedule) =>
         schedule.reportStatus === 'arrival' ||
-        schedule.reportStatus === 'delayed' ||
+        schedule.reportStatus === 'arrival_delayed' ||
         schedule.reportStatus === 'completed'
     ) || null;
 

@@ -5,7 +5,9 @@ import MobileLayout from '@/src/layout/MobileLayout';
 import { useSchedule } from '@/src/contexts/ScheduleContext';
 import { useSession } from 'next-auth/react';
 import { ScheduleListLoading } from '@/src/components/ScheduleList';
-import ScheduleListContent from '@/src/components/ScheduleList';
+import ScheduleListContent, {
+  type Schedule as ScheduleListSchedule,
+} from '@/src/components/ScheduleList';
 import { useMemo, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 
@@ -17,7 +19,7 @@ const MainPage = () => {
 
   // refetchQueries에서 메인 쿼리를 다시 불러오므로 별도 강제 refetch 없음
   // Context에서 가져온 스케줄 데이터 변환
-  const transformedSchedules = schedules.map((schedule) => ({
+  const transformedSchedules: ScheduleListSchedule[] = schedules.map((schedule) => ({
     id: schedule.id,
     time: schedule.time,
     location: schedule.venue || schedule.location || '',
@@ -29,8 +31,11 @@ const MainPage = () => {
       | 'completed'
       | 'canceled'
       | 'wakeup'
+      | 'wakeup_delayed'
       | 'departure'
+      | 'departure_delayed'
       | 'arrival'
+      | 'arrival_delayed'
       | 'delayed',
     currentStep: (schedule.currentStep ?? 0) as 0 | 1 | 2 | 3,
   }));
@@ -49,26 +54,30 @@ const MainPage = () => {
       // 보고 순서에 따라 해당 단계 이상이면 disabled
       switch (reportType) {
         case 'wakeup':
-          // 기상 보고: wakeup 이상이면 disabled
+          // 기상 보고: wakeup 이상 또는 지연 상태면 disabled
           return (
             scheduleStatus === 'wakeup' ||
+            scheduleStatus === 'wakeup_delayed' ||
             scheduleStatus === 'departure' ||
+            scheduleStatus === 'departure_delayed' ||
             scheduleStatus === 'arrival' ||
+            scheduleStatus === 'arrival_delayed' ||
             scheduleStatus === 'delayed' ||
             scheduleStatus === 'completed'
           );
         case 'departure':
-          // 출발 보고: departure 이상이면 disabled
           return (
             scheduleStatus === 'departure' ||
+            scheduleStatus === 'departure_delayed' ||
             scheduleStatus === 'arrival' ||
+            scheduleStatus === 'arrival_delayed' ||
             scheduleStatus === 'delayed' ||
             scheduleStatus === 'completed'
           );
         case 'arrival':
-          // 도착 보고: arrival 이상이면 disabled
           return (
             scheduleStatus === 'arrival' ||
+            scheduleStatus === 'arrival_delayed' ||
             scheduleStatus === 'delayed' ||
             scheduleStatus === 'completed'
           );
@@ -93,11 +102,17 @@ const MainPage = () => {
 
       switch (reportType) {
         case 'departure':
-          // 출발보고는 기상보고가 완료되어야 함
+          if (scheduleStatus === 'wakeup_delayed') {
+            alert('기상 지연되었습니다.');
+            return false;
+          }
           if (
             scheduleStatus !== 'wakeup' &&
             scheduleStatus !== 'departure' &&
+            scheduleStatus !== 'departure_delayed' &&
             scheduleStatus !== 'arrival' &&
+            scheduleStatus !== 'arrival_delayed' &&
+            scheduleStatus !== 'delayed' &&
             scheduleStatus !== 'completed'
           ) {
             alert('기상 보고를 먼저 완료해주세요.');
@@ -105,10 +120,11 @@ const MainPage = () => {
           }
           return true;
         case 'arrival':
-          // 도착보고는 출발보고가 완료되어야 함
           if (
             scheduleStatus !== 'departure' &&
+            scheduleStatus !== 'departure_delayed' &&
             scheduleStatus !== 'arrival' &&
+            scheduleStatus !== 'arrival_delayed' &&
             scheduleStatus !== 'delayed' &&
             scheduleStatus !== 'completed'
           ) {
@@ -117,9 +133,9 @@ const MainPage = () => {
           }
           return true;
         case 'completed':
-          // 종료보고는 도착보고가 완료되어야 함
           if (
             scheduleStatus !== 'arrival' &&
+            scheduleStatus !== 'arrival_delayed' &&
             scheduleStatus !== 'delayed' &&
             scheduleStatus !== 'completed'
           ) {
@@ -144,6 +160,8 @@ const MainPage = () => {
     [checkReportOrder, router]
   );
 
+  const nearestReportStatus = schedules[0]?.reportStatus || 'pending';
+
   const reportCards: Report[] = useMemo(
     () => [
       {
@@ -152,6 +170,13 @@ const MainPage = () => {
         icon: '/images/icons/alarm.png',
         href: '/morning-report',
         disabled: getReportStatus('wakeup'),
+        onClick: () => {
+          if (nearestReportStatus === 'wakeup_delayed') {
+            alert('기상 지연되었습니다.');
+            return;
+          }
+          handleReportClick('wakeup', '/morning-report');
+        },
       },
       {
         title: '출발 보고',
@@ -178,7 +203,7 @@ const MainPage = () => {
         onClick: () => handleReportClick('completed', '/completed-report'),
       },
     ],
-    [getReportStatus, handleReportClick]
+    [getReportStatus, handleReportClick, nearestReportStatus]
   );
 
   const scheduleManagementCard: Report = useMemo(

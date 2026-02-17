@@ -27,11 +27,12 @@ const ReportSchema = new mongoose.Schema(
       enum: [
         'pending',
         'wakeup',
+        'wakeup_delayed',
         'departure',
+        'departure_delayed',
         'arrival',
+        'arrival_delayed',
         'completed',
-        'delayed',
-        'canceled',
       ],
       required: true,
     },
@@ -51,7 +52,7 @@ const ReportSchema = new mongoose.Schema(
       default: Date.now,
     },
   },
-  { timestamps: true }
+  { timestamps: true },
 );
 
 delete mongoose.models.Report; // ✅ 기존 모델 제거

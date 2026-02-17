@@ -179,7 +179,7 @@ const ArrivalReportPage = () => {
         : null;
       const now = new Date();
       const status =
-        arrivalTarget && now > arrivalTarget ? 'delayed' : 'arrival';
+        arrivalTarget && now > arrivalTarget ? 'arrival_delayed' : 'arrival';
 
       await updateArrivalReport({
         variables: {

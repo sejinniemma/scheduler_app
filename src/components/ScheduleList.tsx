@@ -3,7 +3,7 @@
 import { useMemo } from 'react';
 import ProgressBar from './ProgressBar';
 
-interface Schedule {
+export interface Schedule {
   id: string;
   time: string;
   location: string;
@@ -14,8 +14,11 @@ interface Schedule {
     | 'completed'
     | 'canceled'
     | 'wakeup'
+    | 'wakeup_delayed'
     | 'departure'
+    | 'departure_delayed'
     | 'arrival'
+    | 'arrival_delayed'
     | 'delayed';
   currentStep: 0 | 1 | 2 | 3;
 }
@@ -28,10 +31,13 @@ interface ScheduleListProps {
 const getCurrentStepFromStatus = (status: string): 0 | 1 | 2 | 3 => {
   switch (status) {
     case 'wakeup':
+    case 'wakeup_delayed':
       return 0; // 0%
     case 'departure':
+    case 'departure_delayed':
       return 1; // 30%
     case 'arrival':
+    case 'arrival_delayed':
     case 'delayed':
       return 2; // 75%
     case 'completed':
