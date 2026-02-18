@@ -154,7 +154,7 @@ const ScheduleManagementPage = () => {
       });
       await Promise.all([refetch(), refetchConfirmed()]); // 로컬 목록/확정 정보 갱신
       router.refresh(); // 캐시 무효화
-      router.push('/main'); // 메인 이동
+      router.push('/');
     } catch (error) {
       // onError에서 처리되지만, 여기서도 처리 가능
       console.error('스케줄 확정 오류:', error);

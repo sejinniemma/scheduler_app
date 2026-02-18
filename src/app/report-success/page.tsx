@@ -20,7 +20,7 @@ const ReportSuccessContent = () => {
   const handleConfirm = () => {
     // 스케줄 새로고침 후 메인으로 이동
     refreshSchedules().then(() => {
-      router.push('/main');
+      router.push('/');
     });
   };
 
