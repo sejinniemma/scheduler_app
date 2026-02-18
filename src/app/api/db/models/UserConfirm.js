@@ -26,10 +26,9 @@ const UserConfirmSchema = new mongoose.Schema(
       default: Date.now,
     },
   },
-  { timestamps: true }
+  { timestamps: true },
 );
 
 delete mongoose.models.UserConfirm; // ✅ 기존 모델 제거
 export default mongoose.models.UserConfirm ||
   mongoose.model('UserConfirm', UserConfirmSchema);
-

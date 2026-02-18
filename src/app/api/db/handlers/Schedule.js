@@ -29,6 +29,11 @@ export const typeDefs = gql`
     updatedAt: DateTime!
   }
 
+  type simpleResponse {
+    success: Boolean!
+    message: String
+  }
+
   type Query {
     getTodaySchedules: [Schedule!]!
     getAssignedSchedules: [Schedule!]!
@@ -79,7 +84,7 @@ export const typeDefs = gql`
 
 export const resolvers = {
   Query: {
-    getTodaySchedules: async (parent, args, context) => {
+    getTodaySchedules: async (_, _args, context) => {
       // 오늘 날짜 가져오기
       const today = getToday();
 
@@ -132,7 +137,7 @@ export const resolvers = {
     },
 
     // 로그인 사용자의 assigned 스케줄 전체 조회 (날짜 제한 없음)
-    getAssignedSchedules: async (parent, args, context) => {
+    getAssignedSchedules: async (_, _args, context) => {
       const today = getToday();
       const query = {
         $or: [{ mainUser: context.user.id }, { subUser: context.user.id }],
@@ -145,7 +150,7 @@ export const resolvers = {
     },
 
     // 현재 사용자가 이미 확정한 스케줄 ID 목록
-    userConfirmedSchedules: async (parent, args, context) => {
+    userConfirmedSchedules: async (_, _args, context) => {
       const confirms = await UserConfirm.find({
         userId: context.user.id,
         confirmed: true,
@@ -153,7 +158,7 @@ export const resolvers = {
       return confirms.map((c) => c.scheduleId);
     },
 
-    schedule: async (parent, { id }, context) => {
+    schedule: async (_, { id }, context) => {
       const schedule = await Schedule.findOne({ id });
       if (!schedule) {
         throw new Error('스케줄을 찾을 수 없습니다.');
@@ -191,7 +196,7 @@ export const resolvers = {
 
   Mutation: {
     createSchedule: async (
-      parent,
+      _,
       {
         mainUser,
         subUser,
@@ -222,7 +227,7 @@ export const resolvers = {
       return await schedule.save();
     },
 
-    updateSchedule: async (parent, { id, ...updates }, context) => {
+    updateSchedule: async (_, { id, ...updates }, context) => {
       const schedule = await Schedule.findOne({ id });
       if (!schedule) {
         throw new Error('스케줄을 찾을 수 없습니다.');
@@ -238,7 +243,7 @@ export const resolvers = {
       return await schedule.save();
     },
 
-    confirmSchedules: async (parent, { scheduleIds }, context) => {
+    confirmSchedules: async (_, { scheduleIds }, context) => {
       if (!scheduleIds || scheduleIds.length === 0) {
         return {
           success: false,
@@ -294,12 +299,14 @@ export const resolvers = {
           if (confirmations.length === requiredUserIds.length) {
             await Schedule.updateOne(
               { id: schedule.id },
-              { status: 'confirmed' }
+              { status: 'confirmed' },
             );
             confirmedCount++;
 
             // 확정 완료 즉시 카카오 알림톡 발송 (mainUser, subUser 각각)
-            const userIds = [schedule.mainUser, schedule.subUser].filter(Boolean);
+            const userIds = [schedule.mainUser, schedule.subUser].filter(
+              Boolean,
+            );
             const users = await User.find({ id: { $in: userIds } }).lean();
             const scheduleInfo = {
               date: schedule.date,
@@ -310,8 +317,16 @@ export const resolvers = {
             };
             for (const u of users) {
               if (u.phone) {
-                sendScheduleConfirmedAlimtalk(u.phone, u.name, scheduleInfo).catch(
-                  (err) => console.error('[confirmSchedules] 알림톡 발송 실패', u.phone, err)
+                sendScheduleConfirmedAlimtalk(
+                  u.phone,
+                  u.name,
+                  scheduleInfo,
+                ).catch((err) =>
+                  console.error(
+                    '[confirmSchedules] 알림톡 발송 실패',
+                    u.phone,
+                    err,
+                  ),
                 );
               }
             }
@@ -328,7 +343,7 @@ export const resolvers = {
       };
     },
 
-    deleteSchedule: async (parent, { id }, context) => {
+    deleteSchedule: async (_, { id }, context) => {
       const schedule = await Schedule.findOne({ id });
       if (!schedule) {
         return false;

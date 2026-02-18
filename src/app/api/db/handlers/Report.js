@@ -21,6 +21,11 @@ export const typeDefs = gql`
     updatedAt: DateTime!
   }
 
+  type simpleResponse {
+    success: Boolean!
+    message: String
+  }
+
   type Query {
     reports: [Report!]!
     report(id: String!): Report
@@ -53,11 +58,11 @@ export const typeDefs = gql`
 export const resolvers = {
   DateTime: DateTimeResolver,
   Query: {
-    reports: async (parent, args, context) => {
+    reports: async (_, _args, context) => {
       return await Report.find({ userId: context.user.id });
     },
 
-    report: async (parent, { id }, context) => {
+    report: async (_, { id }, context) => {
       const report = await Report.findOne({ id });
       if (!report) {
         throw new Error('보고를 찾을 수 없습니다.');
@@ -69,7 +74,7 @@ export const resolvers = {
       return report;
     },
 
-    reportsBySchedule: async (parent, { scheduleId }, context) => {
+    reportsBySchedule: async (_, { scheduleId }, context) => {
       // 스케줄이 본인 것인지 확인
       const schedule = await Schedule.findOne({ id: scheduleId });
       if (!schedule) {
@@ -88,7 +93,7 @@ export const resolvers = {
       return await Report.find({ scheduleId: schedule.id });
     },
 
-    reportsByUser: async (parent, { userId }, context) => {
+    reportsByUser: async (_, { userId }, context) => {
       // 본인의 보고만 조회 가능
       if (userId !== context.user.id) {
         throw new Error('권한이 없습니다.');
@@ -99,9 +104,9 @@ export const resolvers = {
 
   Mutation: {
     createReport: async (
-      parent,
+      _,
       { scheduleId, status, estimatedTime, currentStep = 0, memo },
-      context
+      context,
     ) => {
       // 스케줄 확인
       const schedule = await Schedule.findOne({ id: scheduleId });
@@ -135,9 +140,9 @@ export const resolvers = {
     },
 
     updateReport: async (
-      parent,
+      _,
       { id, status, estimatedTime, currentStep, memo, imageUrl },
-      context
+      context,
     ) => {
       const report = await Report.findOne({ id });
       if (!report) {
@@ -163,7 +168,7 @@ export const resolvers = {
       return await report.save();
     },
 
-    deleteReport: async (parent, { id }, context) => {
+    deleteReport: async (_, { id }, context) => {
       const report = await Report.findOne({ id });
       if (!report) {
         return false;
