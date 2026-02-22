@@ -287,14 +287,14 @@ export const resolvers = {
             schedule.mainUser,
             ...(schedule.subUser ? [schedule.subUser] : []),
           ];
-          console.log('requiredUserIds', requiredUserIds);
-          // 모두 확정완료를 눌렀는지 확인
+
+          // 해당 스케쥴관 연결된 userConfirm에 모두 확정완료를 눌렀는지 확인
           const confirmations = await UserConfirm.find({
             scheduleId: schedule.id,
             userId: { $in: requiredUserIds },
             confirmed: true,
           }).select('userId');
-          console.log('confirmations', confirmations);
+
           // 모든 필요 사용자에 대한 확정이 완료되면 스케줄 상태 'confirmed'로 변경
           if (confirmations.length === requiredUserIds.length) {
             await Schedule.updateOne(
@@ -310,7 +310,7 @@ export const resolvers = {
             const users = await User.find({ id: { $in: userIds } }).lean();
             const scheduleInfo = {
               date: schedule.date,
-              time: schedule.time || schedule.userArrivalTime,
+              time: schedule.time,
               groom: schedule.groom,
               bride: schedule.bride,
               venue: schedule.venue || schedule.location || '',

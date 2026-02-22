@@ -70,10 +70,7 @@ export async function GET(request: NextRequest) {
 
     for (const schedule of schedules) {
       // 작가 도착 에정시간
-      const arrivalTime = parseArrivalTime(
-        schedule.date,
-        schedule.userArrivalTime ?? schedule.time,
-      );
+      const arrivalTime = parseArrivalTime(schedule.date, schedule.scheduledAt);
       // 작가 도착 에정시간 - 1.5시간 = eta
       const eta = new Date(arrivalTime.getTime() - 1.5 * TimeMs.HOUR);
       // 예식시간
@@ -83,7 +80,7 @@ export async function GET(request: NextRequest) {
 
       const reports = await Report.find({ scheduleId: schedule.id }).lean();
       /** 알림톡 본문에 넣을 스케줄 요약 (날짜, 시간, 신랑/신부) */
-      const scheduleLabel = `${schedule.date} ${schedule.userArrivalTime || schedule.time} ${schedule.groom}/${schedule.bride}`;
+      const scheduleLabel = `${schedule.date} ${schedule.scheduledAt} ${schedule.groom}/${schedule.bride}`;
 
       for (const report of reports) {
         const user = await User.findOne({ id: report.userId }).lean();

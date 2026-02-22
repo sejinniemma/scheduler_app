@@ -16,18 +16,28 @@
  * @param {Record<string, string>} templateParams - 템플릿 치환 변수
  * @returns {Promise<boolean>} 발송 성공 여부
  */
-export async function sendKakaoAlimtalk(phone, templateCode, templateParams = {}) {
+export async function sendKakaoAlimtalk(
+  phone,
+  templateCode,
+  templateParams = {},
+) {
   const apiUrl = process.env.KAKAO_ALIMTALK_API_URL;
   const apiKey = process.env.KAKAO_ALIMTALK_API_KEY;
 
   if (!apiUrl || !apiKey || !templateCode) {
-    console.warn('[Kakao Alimtalk] 설정 부족', { hasUrl: !!apiUrl, hasKey: !!apiKey, templateCode });
+    console.warn('[Kakao Alimtalk] 설정 부족', {
+      hasUrl: !!apiUrl,
+      hasKey: !!apiKey,
+      templateCode,
+    });
     return false;
   }
 
   if (!phone) return false;
 
-  const phoneNumber = phone.startsWith('0') ? `82${phone.replace(/-/g, '').slice(1)}` : phone.replace(/-/g, '');
+  const phoneNumber = phone.startsWith('0')
+    ? `82${phone.replace(/-/g, '').slice(1)}`
+    : phone.replace(/-/g, '');
 
   try {
     const body = {
@@ -43,14 +53,21 @@ export async function sendKakaoAlimtalk(phone, templateCode, templateParams = {}
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        Authorization: apiKey.startsWith('Bearer') ? apiKey : `Bearer ${apiKey}`,
+        Authorization: apiKey.startsWith('Bearer')
+          ? apiKey
+          : `Bearer ${apiKey}`,
       },
       body: JSON.stringify(body),
     });
 
     if (!res.ok) {
       const text = await res.text();
-      console.error('[Kakao Alimtalk] 발송 실패', res.status, templateCode, text);
+      console.error(
+        '[Kakao Alimtalk] 발송 실패',
+        res.status,
+        templateCode,
+        text,
+      );
       return false;
     }
     console.log('[Kakao Alimtalk] 발송 완료', templateCode, phone);
@@ -76,10 +93,16 @@ function getAdminPhones() {
  * @param {string} userName - 수신자 이름
  * @param {{ date: string, time: string, groom: string, bride: string, venue?: string }} scheduleInfo - 스케줄 정보
  */
-export async function sendScheduleConfirmedAlimtalk(phone, userName, scheduleInfo) {
-  const templateCode = process.env.KAKAO_ALIMTALK_TEMPLATE_CODE_CONFIRMED;
+export async function sendScheduleConfirmedAlimtalk(
+  phone,
+  userName,
+  scheduleInfo,
+) {
+  const templateCode = 'schedule_confirm';
   if (!templateCode) {
-    console.warn('[Kakao Alimtalk] 스케줄 확정 템플릿 미설정 (KAKAO_ALIMTALK_TEMPLATE_CODE_CONFIRMED)');
+    console.warn(
+      '[Kakao Alimtalk] 스케줄 확정 템플릿 미설정 (KAKAO_ALIMTALK_TEMPLATE_CODE_CONFIRMED)',
+    );
     return;
   }
 
@@ -102,7 +125,11 @@ export async function sendScheduleConfirmedAlimtalk(phone, userName, scheduleInf
 export async function sendCronWakeupAlimtalk(phone, scheduleLabel) {
   const templateCode = process.env.KAKAO_ALIMTALK_TEMPLATE_WAKEUP;
   if (!templateCode) {
-    console.log('[CRON] 기상 알림톡 미설정 (KAKAO_ALIMTALK_TEMPLATE_WAKEUP)', phone, scheduleLabel);
+    console.log(
+      '[CRON] 기상 알림톡 미설정 (KAKAO_ALIMTALK_TEMPLATE_WAKEUP)',
+      phone,
+      scheduleLabel,
+    );
     return;
   }
   await sendKakaoAlimtalk(phone, templateCode, { scheduleLabel });
@@ -111,7 +138,11 @@ export async function sendCronWakeupAlimtalk(phone, scheduleLabel) {
 export async function sendCronDepartureAlimtalk(phone, scheduleLabel) {
   const templateCode = process.env.KAKAO_ALIMTALK_TEMPLATE_DEPARTURE;
   if (!templateCode) {
-    console.log('[CRON] 출발 알림톡 미설정 (KAKAO_ALIMTALK_TEMPLATE_DEPARTURE)', phone, scheduleLabel);
+    console.log(
+      '[CRON] 출발 알림톡 미설정 (KAKAO_ALIMTALK_TEMPLATE_DEPARTURE)',
+      phone,
+      scheduleLabel,
+    );
     return;
   }
   await sendKakaoAlimtalk(phone, templateCode, { scheduleLabel });
@@ -120,7 +151,11 @@ export async function sendCronDepartureAlimtalk(phone, scheduleLabel) {
 export async function sendCronArrivalAlimtalk(phone, scheduleLabel) {
   const templateCode = process.env.KAKAO_ALIMTALK_TEMPLATE_ARRIVAL;
   if (!templateCode) {
-    console.log('[CRON] 도착 알림톡 미설정 (KAKAO_ALIMTALK_TEMPLATE_ARRIVAL)', phone, scheduleLabel);
+    console.log(
+      '[CRON] 도착 알림톡 미설정 (KAKAO_ALIMTALK_TEMPLATE_ARRIVAL)',
+      phone,
+      scheduleLabel,
+    );
     return;
   }
   await sendKakaoAlimtalk(phone, templateCode, { scheduleLabel });
@@ -130,7 +165,11 @@ export async function sendCronArrivalAlimtalk(phone, scheduleLabel) {
 export async function sendCronCompletedAlimtalk(phone, scheduleLabel) {
   const templateCode = process.env.KAKAO_ALIMTALK_TEMPLATE_COMPLETED;
   if (!templateCode) {
-    console.log('[CRON] 종료 알림톡 미설정 (KAKAO_ALIMTALK_TEMPLATE_COMPLETED)', phone, scheduleLabel);
+    console.log(
+      '[CRON] 종료 알림톡 미설정 (KAKAO_ALIMTALK_TEMPLATE_COMPLETED)',
+      phone,
+      scheduleLabel,
+    );
     return;
   }
   await sendKakaoAlimtalk(phone, templateCode, { scheduleLabel });
@@ -141,7 +180,11 @@ export async function sendCronAdminDelayAlimtalk(scheduleLabel, userName) {
   const templateCode = process.env.KAKAO_ALIMTALK_TEMPLATE_ADMIN_DELAY;
   const adminPhones = getAdminPhones();
   if (!templateCode || adminPhones.length === 0) {
-    console.log('[CRON] 관리자 기상 지연 알림톡 미설정', scheduleLabel, userName);
+    console.log(
+      '[CRON] 관리자 기상 지연 알림톡 미설정',
+      scheduleLabel,
+      userName,
+    );
     return;
   }
   const params = { scheduleLabel, userName: userName || '-' };
@@ -151,11 +194,19 @@ export async function sendCronAdminDelayAlimtalk(scheduleLabel, userName) {
 }
 
 /** 관리자 출발 지연 알림톡 (템플릿: KAKAO_ALIMTALK_TEMPLATE_ADMIN_DEPARTURE_DELAY) */
-export async function sendCronAdminDepartureDelayAlimtalk(scheduleLabel, userName) {
-  const templateCode = process.env.KAKAO_ALIMTALK_TEMPLATE_ADMIN_DEPARTURE_DELAY;
+export async function sendCronAdminDepartureDelayAlimtalk(
+  scheduleLabel,
+  userName,
+) {
+  const templateCode =
+    process.env.KAKAO_ALIMTALK_TEMPLATE_ADMIN_DEPARTURE_DELAY;
   const adminPhones = getAdminPhones();
   if (!templateCode || adminPhones.length === 0) {
-    console.log('[CRON] 관리자 출발 지연 알림톡 미설정', scheduleLabel, userName);
+    console.log(
+      '[CRON] 관리자 출발 지연 알림톡 미설정',
+      scheduleLabel,
+      userName,
+    );
     return;
   }
   const params = { scheduleLabel, userName: userName || '-' };
@@ -164,11 +215,18 @@ export async function sendCronAdminDepartureDelayAlimtalk(scheduleLabel, userNam
   }
 }
 
-export async function sendCronAdminArrivalDelayAlimtalk(scheduleLabel, userName) {
+export async function sendCronAdminArrivalDelayAlimtalk(
+  scheduleLabel,
+  userName,
+) {
   const templateCode = process.env.KAKAO_ALIMTALK_TEMPLATE_ADMIN_ARRIVAL_DELAY;
   const adminPhones = getAdminPhones();
   if (!templateCode || adminPhones.length === 0) {
-    console.log('[CRON] 관리자 도착 지연 알림톡 미설정', scheduleLabel, userName);
+    console.log(
+      '[CRON] 관리자 도착 지연 알림톡 미설정',
+      scheduleLabel,
+      userName,
+    );
     return;
   }
   const params = { scheduleLabel, userName: userName || '-' };
